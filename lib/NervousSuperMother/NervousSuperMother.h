@@ -2,6 +2,7 @@
 #define NervousSuperMother_h
 
 #include "hardware/HardwareControls.h"
+#include "display/Display.h"
 
 /*
 * NervousSuperMother
@@ -15,7 +16,7 @@ private:
 
   byte *inputs;
 
-  byte ioNumber = 5;
+  byte ioNumber = 6;
   byte currentInput = 0;
 
   byte analogResolution = 10;
@@ -39,6 +40,12 @@ private:
   // Triggers
   byte triggerIndex;
 
+  // Display
+  char *display_line_1;
+  char *display_line_2;
+  char *previous_display_line_1;
+  char *previous_display_line_2;
+
   // Callbacks
   using PressCallback = void (*)(byte);
   PressCallback *inputsPressCallback;
@@ -59,6 +66,7 @@ private:
   void readButton(byte inputIndex);
   void readEncoder(byte inputIndex);
   void readTrigger(byte inputIndex);
+  void refreshDisplay();
 
   // Main clock
   elapsedMicros clockMain;
@@ -78,6 +86,7 @@ public:
   void iterateInputs();
   void readCurrentInput();
   void updateEncodeursMaxValue(long encoderMax[NB_ENCODER]);
+  void updateLine(byte line_nb, char line[20]);
 
   // Callbacks
   void setHandlePress(byte inputIndex, PressCallback fptr);
@@ -155,6 +164,18 @@ inline NervousSuperMother::NervousSuperMother(){
     this->inputsTriggerCallback[i] = nullptr;
   }
 
+  // Display
+  this->display_line_1 = new char[20];
+  this->display_line_2 = new char[20];
+  this->previous_display_line_1 = new char[20];
+  this->previous_display_line_2 = new char[20];
+  for(byte i = 0; i < 20; i++){
+    this->display_line_1[i] = " ";
+    this->display_line_2[i] = " ";
+    this->previous_display_line_1[i] = " ";
+    this->previous_display_line_2[i] = " ";
+  }
+
 }
 
 /**
@@ -175,6 +196,8 @@ inline void NervousSuperMother::init(byte *inputs){
   }
 
   setup_hardware_controls();
+
+  setup_lcd();
 
   analogReadResolution(this->analogResolution);
 }
@@ -251,6 +274,9 @@ inline void NervousSuperMother::readCurrentInput(){
     }else {
       this->triggerIndex = 0;
     }
+    break;
+    case 5:
+    this->refreshDisplay();
     break;
   }
 }
@@ -408,6 +434,9 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
     this->inputsEncoderChangeCallback[inputIndex] = fptr;
   }
 
+  /**
+  * Update encoders max value
+  */
   inline void NervousSuperMother::updateEncodeursMaxValue(long encoderMax[NB_ENCODER]) {
     for(byte i = 0; i<NB_ENCODER; i++){
       this->encodersMaxValue[i] = encoderMax[i];
@@ -427,8 +456,37 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
     }
   }
 
+  /**
+  * Handle trigger
+  */
   inline void NervousSuperMother::setHandleTrigger(byte inputIndex, TriggerCallback fptr){
     this->inputsTriggerCallback[inputIndex] = fptr;
+  }
+
+  /**
+  * Update line to display
+  */
+  inline void NervousSuperMother::updateLine(byte line_nb, char line[20]) {
+    if(line_nb == 1){
+      this->display_line_1 = line;
+    }else if(line_nb == 2){
+      this->display_line_2 = line;
+    }
+  }
+
+  /**
+  * Refresh the display
+  */
+  inline void NervousSuperMother::refreshDisplay() {
+    if(this->display_line_1 != this->previous_display_line_1 || this->display_line_2 != this->previous_display_line_2){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(this->display_line_1);
+      lcd.setCursor(0, 1);
+      lcd.print(this->display_line_2);
+      this->previous_display_line_1 = this->display_line_1;
+      this->previous_display_line_2 = this->display_line_2;
+    }
   }
 
   #endif

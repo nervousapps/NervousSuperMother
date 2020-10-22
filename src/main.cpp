@@ -11,6 +11,8 @@ void onPotentiometer(byte inputIndex, unsigned int value, int diffToPrevious) {
   Serial.print(value);
   Serial.print(" previous was ");
   Serial.println(diffToPrevious);
+  char line = strcat("Potentiometer ", strcat(inputIndex, strcat(" : ", value)));
+  device->updateLine(0, line);
 }
 
 void onTrigger(byte inputIndex) {
@@ -48,7 +50,7 @@ void setup() {
   // Starting sequence
   Serial.println("Ready!");
 
-  byte controls[5] = {0,1,2,3,4};
+  byte controls[6] = {0,1,2,3,4,5};
   device->init(controls);
 
   device->setHandlePotentiometerChange(0, onPotentiometer);

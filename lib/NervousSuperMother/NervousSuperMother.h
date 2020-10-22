@@ -41,10 +41,10 @@ private:
   byte triggerIndex;
 
   // Display
-  char *display_line_1;
-  char *display_line_2;
-  char *previous_display_line_1;
-  char *previous_display_line_2;
+  String display_line_1;
+  String display_line_2;
+  String previous_display_line_1;
+  String previous_display_line_2;
 
   // Callbacks
   using PressCallback = void (*)(byte);
@@ -86,7 +86,7 @@ public:
   void iterateInputs();
   void readCurrentInput();
   void updateEncodeursMaxValue(long encoderMax[NB_ENCODER]);
-  void updateLine(byte line_nb, char line[20]);
+  void updateLine(byte line_nb, String line);
 
   // Callbacks
   void setHandlePress(byte inputIndex, PressCallback fptr);
@@ -165,17 +165,10 @@ inline NervousSuperMother::NervousSuperMother(){
   }
 
   // Display
-  this->display_line_1 = new char[20];
-  this->display_line_2 = new char[20];
-  this->previous_display_line_1 = new char[20];
-  this->previous_display_line_2 = new char[20];
-  for(byte i = 0; i < 20; i++){
-    this->display_line_1[i] = " ";
-    this->display_line_2[i] = " ";
-    this->previous_display_line_1[i] = " ";
-    this->previous_display_line_2[i] = " ";
-  }
-
+  this->display_line_1 = "";
+  this->display_line_2 = "";
+  this->previous_display_line_1 = "";
+  this->previous_display_line_2 = "";
 }
 
 /**
@@ -194,12 +187,8 @@ inline void NervousSuperMother::init(byte *inputs){
   for(byte i = 0; i < this->ioNumber; i++){
     this->inputs[i] = inputs[i];
   }
-
   setup_hardware_controls();
-
   setup_lcd();
-
-  analogReadResolution(this->analogResolution);
 }
 
 /**
@@ -408,21 +397,42 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   * @param byte inputeIndex The index of the input
   */
   inline void NervousSuperMother::readEncoder(byte inputIndex) {
-    // Get rotary encoder1 value
-    this->encoders[0] = encoders_knob[inputIndex].read();
-    if(this->encoders[0] > this->encodersMaxValue[0]*4){
-      this->encoders[0] = 0;
-      encoders_knob[inputIndex].write(0);
-    }
-    if(this->encoders[0] < 0){
-      this->encoders[0] = this->encodersMaxValue[0]*4;
-      encoders_knob[inputIndex].write(this->encodersMaxValue[0]*4);
-    }
-    if (this->encoders[0]%4 == 0 && this->encoders[0] != this->encodersPrevious[0]) {
-      this->encodersPrevious[0] = this->encoders[0];
-      // Calling the Encoder callback if there is one
-      if(this->inputsEncoderChangeCallback[0] != nullptr){
-        this->inputsEncoderChangeCallback[0](0, this->encoders[0]/4);
+    // Get rotary encoder value
+    // Reverse
+    if(this->encodersMaxValue[inputIndex] < 0){
+      this->encoders[inputIndex] = encoders_knob[inputIndex].read();
+      if(this->encoders[inputIndex] < this->encodersMaxValue[inputIndex]){
+        this->encoders[inputIndex] = 0;
+        encoders_knob[inputIndex].write(0);
+      }
+      if(this->encoders[inputIndex] > 0){
+        this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
+        encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
+      }
+      if (this->encoders[inputIndex]%4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex]) {
+        this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
+        // Calling the Encoder callback if there is one
+        if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
+          this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex]/4));
+        }
+      }
+    // Normal
+    }else {
+      this->encoders[inputIndex] = encoders_knob[inputIndex].read();
+      if(this->encoders[inputIndex] > this->encodersMaxValue[inputIndex]){
+        this->encoders[inputIndex] = 0;
+        encoders_knob[inputIndex].write(0);
+      }
+      if(this->encoders[inputIndex] < 0){
+        this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
+        encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
+      }
+      if (this->encoders[inputIndex]%4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex]) {
+        this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
+        // Calling the Encoder callback if there is one
+        if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
+          this->inputsEncoderChangeCallback[inputIndex](inputIndex, this->encoders[inputIndex]/4);
+        }
       }
     }
   }
@@ -439,7 +449,7 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   */
   inline void NervousSuperMother::updateEncodeursMaxValue(long encoderMax[NB_ENCODER]) {
     for(byte i = 0; i<NB_ENCODER; i++){
-      this->encodersMaxValue[i] = encoderMax[i];
+      this->encodersMaxValue[i] = encoderMax[i]*4;
     }
   }
 
@@ -466,7 +476,7 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   /**
   * Update line to display
   */
-  inline void NervousSuperMother::updateLine(byte line_nb, char line[20]) {
+  inline void NervousSuperMother::updateLine(byte line_nb, String line) {
     if(line_nb == 1){
       this->display_line_1 = line;
     }else if(line_nb == 2){
@@ -479,11 +489,34 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   */
   inline void NervousSuperMother::refreshDisplay() {
     if(this->display_line_1 != this->previous_display_line_1 || this->display_line_2 != this->previous_display_line_2){
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print(this->display_line_1);
-      lcd.setCursor(0, 1);
-      lcd.print(this->display_line_2);
+      byte j = 0;
+      for(byte i = 0; i < this->display_line_1.length(); i++){
+        if(this->previous_display_line_1[i] != this->display_line_1[i]){
+          lcd.setCursor(i, 0);
+          lcd.print(this->display_line_1[i]);
+        }
+        j = i+1;
+      }
+      if(j < 20){
+        for(byte i = j; i < 20; i++){
+          lcd.setCursor(i, 0);
+          lcd.print(" ");
+        }
+      }
+      j = 0;
+      for(byte i = 0; i < this->display_line_2.length(); i++){
+        if(this->previous_display_line_2[i] != this->display_line_2[i]){
+          lcd.setCursor(i, 1);
+          lcd.print(this->display_line_2[i]);
+        }
+        j = i+1;
+      }
+      if(j < 20){
+        for(byte i = j; i < 20; i++){
+          lcd.setCursor(i, 1);
+          lcd.print(" ");
+        }
+      }
       this->previous_display_line_1 = this->display_line_1;
       this->previous_display_line_2 = this->display_line_2;
     }

@@ -107,7 +107,6 @@ void setup_progressbar() {
 void setup_lcd(){
   // set up the LCD's number of rows and columns:
   lcd.begin(20, 2);
-
   setup_progressbar();
 }
 

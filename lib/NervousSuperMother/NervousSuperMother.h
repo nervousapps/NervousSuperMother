@@ -85,7 +85,8 @@ public:
   int getAnalogMinValue();
   void iterateInputs();
   void readCurrentInput();
-  void updateEncodeursMaxValue(long encoderMax[NB_ENCODER]);
+  void updateEncodeursMaxValue(byte index, long encoderMax);
+  void updateEncodeursValue(byte inputIndex, long encoderValue);
   void updateLine(byte line_nb, String line);
 
   // Callbacks
@@ -447,10 +448,15 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   /**
   * Update encoders max value
   */
-  inline void NervousSuperMother::updateEncodeursMaxValue(long encoderMax[NB_ENCODER]) {
-    for(byte i = 0; i<NB_ENCODER; i++){
-      this->encodersMaxValue[i] = encoderMax[i]*4;
-    }
+  inline void NervousSuperMother::updateEncodeursMaxValue(byte inputIndex, long encoderMax) {
+    this->encodersMaxValue[inputIndex] = encoderMax*4;
+  }
+
+  /**
+  * Update encoders value
+  */
+  inline void NervousSuperMother::updateEncodeursValue(byte inputIndex, long encoderValue) {
+    encoders_knob[inputIndex].write(encoderValue*4);
   }
 
   /**

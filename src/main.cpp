@@ -109,8 +109,8 @@ void setup() {
   device->setHandleDoublePress(1, onButtonDoublePress);
   device->setHandleEncoderChange(0, onEncoder);
   device->setHandleEncoderChange(1, onEncoder);
-  long encoderMaxValue[NB_ENCODER] = {-50,30};
-  device->updateEncodeursMaxValue(encoderMaxValue);
+  device->updateEncodeursMaxValue(0, -50);
+  device->updateEncodeursMaxValue(1, 30);
   device->setHandleTrigger(0, onTrigger);
   device->setHandleTrigger(1, onTrigger);
   device->setHandleTrigger(2, onTrigger);

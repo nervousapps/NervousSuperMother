@@ -402,11 +402,11 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
     // Reverse
     if(this->encodersMaxValue[inputIndex] < 0){
       this->encoders[inputIndex] = encoders_knob[inputIndex].read();
-      if(this->encoders[inputIndex] < this->encodersMaxValue[inputIndex]){
+      if(this->encoders[inputIndex] < this->encodersMaxValue[inputIndex]-2){
         this->encoders[inputIndex] = 0;
         encoders_knob[inputIndex].write(0);
       }
-      if(this->encoders[inputIndex] > 0){
+      if(this->encoders[inputIndex] > 2){
         this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
         encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
       }
@@ -414,17 +414,17 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
         this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
         // Calling the Encoder callback if there is one
         if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
-          this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex]/4));
+          this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex])/4);
         }
       }
     // Normal
     }else {
       this->encoders[inputIndex] = encoders_knob[inputIndex].read();
-      if(this->encoders[inputIndex] > this->encodersMaxValue[inputIndex]){
+      if(this->encoders[inputIndex] > this->encodersMaxValue[inputIndex]+2){
         this->encoders[inputIndex] = 0;
         encoders_knob[inputIndex].write(0);
       }
-      if(this->encoders[inputIndex] < 0){
+      if(this->encoders[inputIndex] < -2){
         this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
         encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
       }

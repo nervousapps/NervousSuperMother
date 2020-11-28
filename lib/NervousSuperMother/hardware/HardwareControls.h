@@ -12,10 +12,8 @@
 #include <Encoder.h>
 #include "pins.h"
 
-// ******POTENTIOMETERS CONSTANT VALUES********
-const int POTARDS_PINS = 18; // number of Analog potentiometers PINS
-
-const int ANALOG_CONTROL_PINS = POTARDS_PINS;
+// ******ANALOG CONSTANT VALUES********
+const int ANALOG_CONTROL_PINS = 18;
 const int ANALOG_CONTROL[ANALOG_CONTROL_PINS] = {
   SLIDE1,
   SLIDE2,

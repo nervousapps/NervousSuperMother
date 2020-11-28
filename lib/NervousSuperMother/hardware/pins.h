@@ -44,7 +44,10 @@
 // Switches
 #define SW1	          A17
 #define SW2	          A18
-#define SW3	          A25
+// Teensy 3.5
+// #define SW3	          A25
+// Teensy 3.6
+#define SW3	          A23
 
 // Sliders
 #define SLIDE1	      A0

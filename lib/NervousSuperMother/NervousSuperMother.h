@@ -6,7 +6,7 @@
 
 /*
 * NervousSuperMother
-* v0.0.1 beta
+* v0.1.0 beta
 */
 class NervousSuperMother{
 
@@ -70,10 +70,10 @@ private:
 
   // Main clock
   elapsedMicros clockMain;
-  const unsigned int intervalClockMain = 5000;
+  const unsigned int intervalClockMain = 10000;
 
   // Inputs clock
-  const unsigned int intervalInputs = 100;
+  const unsigned int intervalInputs = 500;
   elapsedMicros clockInputs;
 
 public:
@@ -91,8 +91,8 @@ public:
 
   // Callbacks
   void setHandlePress(byte inputIndex, PressCallback fptr);
-  void setHandleDoublePress(byte inputIndex, LongPressCallback fptr);
-  void setHandleLongPress(byte inputIndex, DoublePressCallback fptr);
+  void setHandleLongPress(byte inputIndex, LongPressCallback fptr);
+  void setHandleDoublePress(byte inputIndex, DoublePressCallback fptr);
   void setHandlePotentiometerChange(byte inputIndex, PotentiometerChangeCallback fptr);
   void setHandleEncoderChange(byte inputIndex, EncoderChangeCallback fptr);
   void setHandleTrigger(byte inputIndex, TriggerCallback fptr);
@@ -112,13 +112,13 @@ inline NervousSuperMother::NervousSuperMother(){
 
   // Potentiometers
   this->potardIndex = 0;
-  this->potentiometers = new unsigned int[POTARDS_PINS];
-  this->potentiometersPrevious = new unsigned int[POTARDS_PINS];
-  this->potentiometersTemp = new unsigned int[POTARDS_PINS];
-  this->potentiometersReadings = new byte[POTARDS_PINS];
-  this->inputsPotentiometerChangeCallback = new PotentiometerChangeCallback[POTARDS_PINS];
+  this->potentiometers = new unsigned int[ANALOG_CONTROL_PINS];
+  this->potentiometersPrevious = new unsigned int[ANALOG_CONTROL_PINS];
+  this->potentiometersTemp = new unsigned int[ANALOG_CONTROL_PINS];
+  this->potentiometersReadings = new byte[ANALOG_CONTROL_PINS];
+  this->inputsPotentiometerChangeCallback = new PotentiometerChangeCallback[ANALOG_CONTROL_PINS];
 
-  for(byte i = 0; i < POTARDS_PINS; i++){
+  for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
     this->potentiometers[i] = 0;
     this->potentiometersPrevious[i] = 0;
     this->potentiometersTemp[i] = 0;
@@ -185,6 +185,11 @@ inline NervousSuperMother *NervousSuperMother::getInstance()    {
 * Init
 */
 inline void NervousSuperMother::init(byte *inputs){
+  // Configure the ADCs
+  analogReadResolution(analogResolution);
+  analogReadAveraging(analogResolution);
+  analogReference(EXTERNAL);
+
   for(byte i = 0; i < this->ioNumber; i++){
     this->inputs[i] = inputs[i];
   }
@@ -203,6 +208,7 @@ inline void NervousSuperMother::update(){
   if (this->clockMain > this->intervalClockMain / 2) {
     return;
   }else{
+    // AudioNoInterrupts();
     // Inputs
     // At the end of the clock we iterate to next input
     if (this->clockInputs >= this->intervalInputs) {
@@ -212,6 +218,7 @@ inline void NervousSuperMother::update(){
       // Reading the current input
       this->readCurrentInput();
     }
+    // AudioInterrupts();
   }
 }
 
@@ -234,7 +241,7 @@ inline void NervousSuperMother::readCurrentInput(){
     break;
 
     case 1:
-    if(this->potardIndex < POTARDS_PINS) {
+    if(this->potardIndex < ANALOG_CONTROL_PINS) {
       this->readPotentiometer(this->potardIndex);
       this->potardIndex ++;
     } else {
@@ -313,9 +320,9 @@ inline int NervousSuperMother::getInput(byte index){
     case 3:
     // Encoder
     // Device is not saving the encoders values, only the latest change
-    // int value = this->encoders[index];
-    // this->encoders[index] = 0;
-    // return value;
+    int value = this->encoders[index];
+    this->encoders[index] = 0;
+    return value;
     break;
   }
 }
@@ -354,19 +361,25 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
         if(digital_button[buttonIndex].fallingEdge()){
           this->pushed[buttonIndex] = true;
           if(this->inputsPressTime[buttonIndex] <= 400 && this->pushed[buttonIndex]){
-            this->inputsDoublePressCallback[buttonIndex](buttonIndex);
+            if(this->inputsDoublePressCallback[buttonIndex] != nullptr){
+              this->inputsDoublePressCallback[buttonIndex](buttonIndex);
+            }
           }
           this->inputsPressTime[buttonIndex] = 0;
         }
 
         if(digital_button[buttonIndex].risingEdge()){
           if(this->inputsPressTime[buttonIndex] > 150 && this->inputsPressTime[buttonIndex] < 500){
-            this->inputsPressCallback[buttonIndex](buttonIndex);
+            if(this->inputsPressCallback[buttonIndex] != nullptr){
+              this->inputsPressCallback[buttonIndex](buttonIndex);
+            }
           }
           this->pushed[buttonIndex] = false;
         }
       }else if(this->inputsPressTime[buttonIndex] >= 800 && this->pushed[buttonIndex]){
-        this->inputsLongPressCallback[buttonIndex](buttonIndex);
+        if(this->inputsLongPressCallback[buttonIndex] != nullptr){
+          this->inputsLongPressCallback[buttonIndex](buttonIndex);
+        }
         this->pushed[buttonIndex] = false;
       }
     }

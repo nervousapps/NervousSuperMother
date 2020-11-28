@@ -79,28 +79,13 @@ void setup() {
   MIDI.setHandleNoteOn(OnNoteOn);
 
   // Init device NervousSuperMother
-  byte controls[6] = {0,1,2,3,4,5};
+  byte controls[3] = {0,1,4};
   device->init(controls);
 
   // Set the handlers
-  device->setHandlePotentiometerChange(0, onPotentiometer);
-  device->setHandlePotentiometerChange(1, onPotentiometer);
-  device->setHandlePotentiometerChange(2, onPotentiometer);
-  device->setHandlePotentiometerChange(3, onPotentiometer);
-  device->setHandlePotentiometerChange(4, onPotentiometer);
-  device->setHandlePotentiometerChange(5, onPotentiometer);
-  device->setHandlePotentiometerChange(6, onPotentiometer);
-  device->setHandlePotentiometerChange(7, onPotentiometer);
-  device->setHandlePotentiometerChange(8, onPotentiometer);
-  device->setHandlePotentiometerChange(9, onPotentiometer);
-  device->setHandlePotentiometerChange(10, onPotentiometer);
-  device->setHandlePotentiometerChange(11, onPotentiometer);
-  device->setHandlePotentiometerChange(12, onPotentiometer);
-  device->setHandlePotentiometerChange(13, onPotentiometer);
-  device->setHandlePotentiometerChange(14, onPotentiometer);
-  device->setHandlePotentiometerChange(15, onPotentiometer);
-  device->setHandlePotentiometerChange(16, onPotentiometer);
-  device->setHandlePotentiometerChange(17, onPotentiometer);
+  for (int i=0;i<ANALOG_CONTROL_PINS;i++){
+    device->setHandlePotentiometerChange(i, onPotentiometer);
+  }
   device->setHandlePress(0, onButtonPress);
   device->setHandleLongPress(0, onButtonLongPress);
   device->setHandleDoublePress(0, onButtonDoublePress);
@@ -125,6 +110,7 @@ void setup() {
     draw_progressbar(i);
     delay(2);
   }
+
 }
 
 void loop() {

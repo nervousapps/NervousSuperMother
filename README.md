@@ -79,3 +79,8 @@ I made the panel here : https://www.john-steel.com/
 # TODO
 - clean code
 - separate switch and potentiometers from sliders
+
+# Hardware fix
+- slider Teensy 3.6
+- slider not connected (wire)
+- Teensy 4.1 adaptor board

@@ -18,16 +18,15 @@ private:
 
   byte ioNumber = 6;
   byte currentInput = 0;
+  byte analogResolution = analogResolution;
 
-  byte analogResolution = 10;
-
-  // Potentiometers
-  unsigned int *potentiometers;
-  unsigned int *potentiometersPrevious;
-  byte potardIndex;
-  // For smoothing purposes
-  unsigned int *potentiometersTemp;
-  byte *potentiometersReadings;
+  // Switches
+  unsigned int *switches;
+  unsigned int *switchesPrevious;
+  byte switchIndex;
+  // Mux Controls
+  unsigned int *muxcontrols;
+  unsigned int *muxcontrolsPrevious;
   // Buttons
   bool *buttons;
   byte buttonIndex;
@@ -39,6 +38,10 @@ private:
   long *encodersMaxValue;
   // Triggers
   byte triggerIndex;
+  // CVs
+  unsigned int *cvs;
+  unsigned int *cvsPrevious;
+  byte cvIndex;
 
   // Display
   String display_line_1;
@@ -54,18 +57,24 @@ private:
   using DoublePressCallback = void (*)(byte);
   DoublePressCallback *inputsDoublePressCallback;
   elapsedMillis *inputsPressTime;
-  using PotentiometerChangeCallback = void (*)(byte, unsigned int, int);
-  PotentiometerChangeCallback *inputsPotentiometerChangeCallback;
+  using SwitchChangeCallback = void (*)(byte, unsigned int, int);
+  SwitchChangeCallback *inputsSwitchesChangeCallback;
+  using MuxControlChangeCallback = void (*)(byte, unsigned int, int);
+  MuxControlChangeCallback *inputsMuxControlsChangeCallback;
   using EncoderChangeCallback = void (*)(byte, long);
   EncoderChangeCallback *inputsEncoderChangeCallback;
   using TriggerCallback = void (*)(byte);
   TriggerCallback *inputsTriggerCallback;
+  using CVChangeCallback = void (*)(byte, unsigned int, int);
+  CVChangeCallback *inputsCVChangeCallback;
 
 
-  void readPotentiometer(byte inputIndex);
+  void readSwitch(byte inputIndex);
+  void readMux();
   void readButton(byte inputIndex);
   void readEncoder(byte inputIndex);
   void readTrigger(byte inputIndex);
+  void readCV(byte inputIndex);
   void refreshDisplay();
 
   // Main clock
@@ -93,9 +102,11 @@ public:
   void setHandlePress(byte inputIndex, PressCallback fptr);
   void setHandleLongPress(byte inputIndex, LongPressCallback fptr);
   void setHandleDoublePress(byte inputIndex, DoublePressCallback fptr);
-  void setHandlePotentiometerChange(byte inputIndex, PotentiometerChangeCallback fptr);
+  void setHandleSwitchChange(byte inputIndex, SwitchChangeCallback fptr);
+  void setHandleMuxControlChange(byte inputIndex, MuxControlChangeCallback fptr);
   void setHandleEncoderChange(byte inputIndex, EncoderChangeCallback fptr);
   void setHandleTrigger(byte inputIndex, TriggerCallback fptr);
+  void setHandleCVChange(byte inputIndex, CVChangeCallback fptr);
 };
 
 // Instance pre init
@@ -110,20 +121,27 @@ inline NervousSuperMother::NervousSuperMother(){
     this->inputs[i] = 0;
   }
 
-  // Potentiometers
-  this->potardIndex = 0;
-  this->potentiometers = new unsigned int[ANALOG_CONTROL_PINS];
-  this->potentiometersPrevious = new unsigned int[ANALOG_CONTROL_PINS];
-  this->potentiometersTemp = new unsigned int[ANALOG_CONTROL_PINS];
-  this->potentiometersReadings = new byte[ANALOG_CONTROL_PINS];
-  this->inputsPotentiometerChangeCallback = new PotentiometerChangeCallback[ANALOG_CONTROL_PINS];
+  // Switches
+  this->switchIndex = 0;
+  this->switches = new unsigned int[ANALOG_CONTROL_PINS];
+  this->switchesPrevious = new unsigned int[ANALOG_CONTROL_PINS];
+  this->inputsSwitchesChangeCallback = new SwitchChangeCallback[ANALOG_CONTROL_PINS];
 
   for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
-    this->potentiometers[i] = 0;
-    this->potentiometersPrevious[i] = 0;
-    this->potentiometersTemp[i] = 0;
-    this->potentiometersReadings[i] = 0;
-    this->inputsPotentiometerChangeCallback[i] = nullptr;
+    this->switches[i] = 0;
+    this->switchesPrevious[i] = 0;
+    this->inputsSwitchesChangeCallback[i] = nullptr;
+  }
+
+  // Mux controls
+  this->muxcontrols = new unsigned int[MnumControls];
+  this->muxcontrolsPrevious = new unsigned int[MnumControls];
+  this->inputsMuxControlsChangeCallback = new MuxControlChangeCallback[MnumControls];
+
+  for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
+    this->muxcontrols[i] = 0;
+    this->muxcontrolsPrevious[i] = 0;
+    this->inputsMuxControlsChangeCallback[i] = nullptr;
   }
 
   // Buttons
@@ -165,6 +183,18 @@ inline NervousSuperMother::NervousSuperMother(){
     this->inputsTriggerCallback[i] = nullptr;
   }
 
+  // CVs
+  this->cvIndex = 0;
+  this->cvs = new unsigned int[CV_PINS];
+  this->cvsPrevious = new unsigned int[CV_PINS];
+  this->inputsCVChangeCallback = new CVChangeCallback[CV_PINS];
+
+  for(byte i = 0; i < CV_PINS; i++){
+    this->cvs[i] = 0;
+    this->cvsPrevious[i] = 0;
+    this->inputsCVChangeCallback[i] = nullptr;
+  }
+
   // Display
   this->display_line_1 = "";
   this->display_line_2 = "";
@@ -188,7 +218,7 @@ inline void NervousSuperMother::init(byte *inputs){
   // Configure the ADCs
   analogReadResolution(analogResolution);
   analogReadAveraging(analogResolution);
-  analogReference(EXTERNAL);
+  // analogReference(EXTERNAL);
 
   for(byte i = 0; i < this->ioNumber; i++){
     this->inputs[i] = inputs[i];
@@ -241,14 +271,19 @@ inline void NervousSuperMother::readCurrentInput(){
     break;
 
     case 1:
-    if(this->potardIndex < ANALOG_CONTROL_PINS) {
-      this->readPotentiometer(this->potardIndex);
-      this->potardIndex ++;
+    readMux();
+    break;
+
+    case 2:
+    if(this->switchIndex < ANALOG_CONTROL_PINS) {
+      this->readSwitch(this->switchIndex);
+      this->switchIndex ++;
     } else {
-      this->potardIndex = 0;
+      this->switchIndex = 0;
     }
     break;
-    case 2:
+
+    case 3:
     if(this->buttonIndex < BUTTON_PINS) {
       this->readButton(this->buttonIndex);
       this->buttonIndex ++;
@@ -256,7 +291,8 @@ inline void NervousSuperMother::readCurrentInput(){
       this->buttonIndex = 0;
     }
     break;
-    case 3:
+
+    case 4:
     if(this->encoderIndex < NB_ENCODER) {
       this->readEncoder(this->encoderIndex);
       this->encoderIndex ++;
@@ -264,7 +300,8 @@ inline void NervousSuperMother::readCurrentInput(){
       this->encoderIndex = 0;
     }
     break;
-    case 4:
+
+    case 5:
     if(this->triggerIndex < TRIGGER_PINS) {
       this->readTrigger(this->triggerIndex);
       this->triggerIndex ++;
@@ -272,7 +309,8 @@ inline void NervousSuperMother::readCurrentInput(){
       this->triggerIndex = 0;
     }
     break;
-    case 5:
+
+    case 6:
     this->refreshDisplay();
     break;
   }
@@ -282,20 +320,45 @@ inline void NervousSuperMother::readCurrentInput(){
 * Get potentiometer value
 * @param byte inputeIndex The index of the input
 */
-inline void NervousSuperMother::readPotentiometer(byte inputIndex){
+inline void NervousSuperMother::readSwitch(byte inputIndex){
   analog_controls[inputIndex].update();
   if(analog_controls[inputIndex].hasChanged()){
-    this->potentiometers[inputIndex] = analog_controls[inputIndex].getValue();
+    this->switches[inputIndex] = analog_controls[inputIndex].getValue();
 
-    if(this->potentiometers[inputIndex] != this->potentiometersPrevious[inputIndex]){
+    if(this->switches[inputIndex] != this->switchesPrevious[inputIndex]){
       // Calling the potentiometer callback if there is one
-      if(this->inputsPotentiometerChangeCallback[inputIndex] != nullptr){
-        this->inputsPotentiometerChangeCallback[inputIndex](inputIndex, this->potentiometers[inputIndex], this->potentiometers[inputIndex] - this->potentiometersPrevious[inputIndex] );
+      if(this->inputsSwitchesChangeCallback[inputIndex] != nullptr){
+        this->inputsSwitchesChangeCallback[inputIndex](inputIndex, this->switches[inputIndex], this->switches[inputIndex] - this->switchesPrevious[inputIndex] );
       }
     }
-    this->potentiometersPrevious[inputIndex] = this->potentiometers[inputIndex];
+    this->switchesPrevious[inputIndex] = this->switches[inputIndex];
   }
 
+}
+
+/**
+* Get muxer controls value
+*/
+inline void NervousSuperMother::readMux() {
+  static byte muxInput = 0;
+
+  // TODO : Test if it can be done with ResponsiveAnalogRead as readSwitch
+  this->muxcontrols[muxInput] = analogRead(MZ);
+
+  if(this->muxcontrols[muxInput] != this->muxcontrolsPrevious[muxInput]){
+    // Calling the potentiometer callback if there is one
+    if(this->inputsMuxControlsChangeCallback[muxInput] != nullptr){
+      this->inputsMuxControlsChangeCallback[muxInput](muxInput, this->muxcontrols[muxInput], this->muxcontrols[muxInput] - this->muxcontrolsPrevious[muxInput] );
+    }
+  }
+  this->muxcontrolsPrevious[muxInput] = this->muxcontrols[muxInput];
+
+  muxInput++;
+  if (muxInput >= MnumControls) muxInput = 0;
+  digitalWrite(MS0, muxInput & B0001);
+  digitalWrite(MS1, muxInput & B0010);
+  digitalWrite(MS2, muxInput & B0100);
+  digitalWrite(MS3, muxInput & B1000);
 }
 
 /**
@@ -314,10 +377,14 @@ inline int NervousSuperMother::getInput(byte index){
     return !this->buttons[index];
     break;
     case 2:
-    // Potentiometer
-    return this->potentiometers[index];
+    // Mux controls
+    return this->muxcontrols[index];
     break;
     case 3:
+    // Mux controls
+    return this->switches[index];
+    break;
+    case 4:
     // Encoder
     // Device is not saving the encoders values, only the latest change
     int value = this->encoders[index];
@@ -342,10 +409,17 @@ inline int NervousSuperMother::getAnalogMaxValue(){
 }
 
 /**
-* Handle potentiometer
+* Handle switches
 */
-inline void NervousSuperMother::setHandlePotentiometerChange(byte inputIndex, PotentiometerChangeCallback fptr){
-  this->inputsPotentiometerChangeCallback[inputIndex] = fptr;
+inline void NervousSuperMother::setHandleSwitchChange(byte inputIndex, SwitchChangeCallback fptr){
+  this->inputsSwitchesChangeCallback[inputIndex] = fptr;
+}
+
+/**
+* Handle Mux controls
+*/
+inline void NervousSuperMother::setHandleMuxControlChange(byte inputIndex, MuxControlChangeCallback fptr){
+  this->inputsMuxControlsChangeCallback[inputIndex] = fptr;
 }
 
 /**
@@ -490,6 +564,32 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   */
   inline void NervousSuperMother::setHandleTrigger(byte inputIndex, TriggerCallback fptr){
     this->inputsTriggerCallback[inputIndex] = fptr;
+  }
+
+  /**
+  * Get CVx value
+  * @param byte inputeIndex The index of the input
+  */
+  inline void NervousSuperMother::readCV(byte inputIndex){
+    cv_controls[inputIndex].update();
+    if(cv_controls[inputIndex].hasChanged()){
+      this->cvs[inputIndex] = cv_controls[inputIndex].getValue();
+
+      if(this->cvs[inputIndex] != this->cvsPrevious[inputIndex]){
+        // Calling the potentiometer callback if there is one
+        if(this->inputsCVChangeCallback[inputIndex] != nullptr){
+          this->inputsCVChangeCallback[inputIndex](inputIndex, this->cvs[inputIndex], this->cvs[inputIndex] - this->cvsPrevious[inputIndex] );
+        }
+      }
+      this->cvsPrevious[inputIndex] = this->cvs[inputIndex];
+    }
+  }
+
+  /**
+  * Handle CVs
+  */
+  inline void NervousSuperMother::setHandleCVChange(byte inputIndex, CVChangeCallback fptr){
+    this->inputsCVChangeCallback[inputIndex] = fptr;
   }
 
   /**

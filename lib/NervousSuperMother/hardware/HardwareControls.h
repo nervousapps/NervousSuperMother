@@ -12,9 +12,17 @@
 #include <Encoder.h>
 #include "pins.h"
 
+const byte analogResolution = 10;
+
 // ******ANALOG CONSTANT VALUES********
-const int ANALOG_CONTROL_PINS = 18;
+const int ANALOG_CONTROL_PINS = 3;
 const int ANALOG_CONTROL[ANALOG_CONTROL_PINS] = {
+  SW1,
+  SW2,
+  SW3
+};
+
+const int MUX_CONTROL[MnumControls] = {
   SLIDE1,
   SLIDE2,
   SLIDE3,
@@ -29,10 +37,7 @@ const int ANALOG_CONTROL[ANALOG_CONTROL_PINS] = {
   POT2,
   POT3,
   POT4,
-  POT5,
-  SW1,
-  SW2,
-  SW3
+  POT5
 };
 
 // ******BUTTONS CONSTANT VALUES********
@@ -47,14 +52,19 @@ const int BUTTONS[BUTTON_PINS] = {
 };
 
 // ******TRIGGERS CONSTANT VALUES********
-const int TRIGGER_PINS = 6;
+const int TRIGGER_PINS = 2;
 const int TRIGGERS[TRIGGER_PINS] = {
   TRIG1,
   TRIG2,
-  TRIG3,
-  TRIG4,
-  TRIG5,
-  TRIG6
+};
+
+// ******CVs CONSTANT VALUES********
+const int CV_PINS = 4;
+const int CVs[CV_PINS] = {
+  CV1,
+  CV2,
+  CV3,
+  CV4
 };
 
 //******VARIABLES***********
@@ -65,22 +75,15 @@ const int TRIGGERS[TRIGGER_PINS] = {
 ResponsiveAnalogRead analog_controls[]{
   {ANALOG_CONTROL[0],true},
   {ANALOG_CONTROL[1],true},
-  {ANALOG_CONTROL[2],true},
-  {ANALOG_CONTROL[3],true},
-  {ANALOG_CONTROL[4],true},
-  {ANALOG_CONTROL[5],true},
-  {ANALOG_CONTROL[6],true},
-  {ANALOG_CONTROL[7],true},
-  {ANALOG_CONTROL[8],true},
-  {ANALOG_CONTROL[9],true},
-  {ANALOG_CONTROL[10],true},
-  {ANALOG_CONTROL[11],true},
-  {ANALOG_CONTROL[12],true},
-  {ANALOG_CONTROL[13],true},
-  {ANALOG_CONTROL[14],true},
-  {ANALOG_CONTROL[15],true},
-  {ANALOG_CONTROL[16],true},
-  {ANALOG_CONTROL[17],true}
+  {ANALOG_CONTROL[2],true}
+};
+
+// initialize the CVs
+ResponsiveAnalogRead cv_controls[]{
+  {CVs[0],true},
+  {CVs[1],true},
+  {CVs[2],true},
+  {CVs[3],true}
 };
 
 // initialize the bounce objects
@@ -91,11 +94,7 @@ Bounce digital_button[] =   {
 
 Bounce digital_trigger[] =   {
   Bounce(TRIGGERS[0],BOUNCE_TIME),
-  Bounce(TRIGGERS[1],BOUNCE_TIME),
-  Bounce(TRIGGERS[2],BOUNCE_TIME),
-  Bounce(TRIGGERS[3],BOUNCE_TIME),
-  Bounce(TRIGGERS[4],BOUNCE_TIME),
-  Bounce(TRIGGERS[5],BOUNCE_TIME)
+  Bounce(TRIGGERS[1],BOUNCE_TIME)
 };
 
 const int NB_ENCODER = 2;
@@ -113,6 +112,13 @@ void setup_hardware_controls(){
   for (int i=0;i<TRIGGER_PINS;i++){
     pinMode(TRIGGERS[i], INPUT_PULLUP);
   }
+
+  // Init muxer pins
+  pinMode(MS0, OUTPUT);
+  pinMode(MS1, OUTPUT);
+  pinMode(MS2, OUTPUT);
+  pinMode(MS3, OUTPUT);
+
 };
 
 #endif

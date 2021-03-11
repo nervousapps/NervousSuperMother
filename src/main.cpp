@@ -3,27 +3,40 @@
 #include <SD.h>
 #include <SPI.h>
 #include <SerialFlash.h>
+#include <Audio.h>
 #include <NervousSuperMother.h>
+
+
+AudioControlSGTL5000     sgtl5000_1;
+AudioOutputI2S           i2s1;
+AudioOutputPT8211        pt8211_1;
 
 // Motherboard
 NervousSuperMother * device = NervousSuperMother::getInstance();
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
-void onPotentiometer(byte inputIndex, unsigned int value, int diffToPrevious) {
-  Serial.print("Potentiometer ");
+void onMuxControl(byte inputIndex, unsigned int value, int diffToPrevious) {
+  Serial.print("MuxControl :  ");
   Serial.print(inputIndex);
   Serial.print(" : ");
   Serial.print(value);
   Serial.print(" previous was ");
   Serial.println(diffToPrevious);
-  String line = "Potard " + String(inputIndex) + " : " + String(value);
+  String line = "MuxControl " + String(inputIndex) + " : " + String(value);
   device->updateLine(1, line);
 }
 
 void onTrigger(byte inputIndex) {
   Serial.print("Trigger ! : ");
   Serial.println(inputIndex);
+}
+
+void onCV(byte inputIndex, unsigned int value, int diffToPrevious) {
+  Serial.print("CV : ");
+  Serial.println(inputIndex);
+  String line = "CV " + String(inputIndex) + " : " + String(value);
+  device->updateLine(1, line);
 }
 
 void onButtonPress(byte inputIndex) {
@@ -69,14 +82,18 @@ void setup() {
   Serial.println("Ready!");
 
   // Configure the ADCs
-  analogReadResolution(7);
+  analogReadResolution(10);
   analogReadAveraging(4);
-  analogReference(EXTERNAL);
+  // analogReference(EXTERNAL);
 
   // Init MIDI and set handlers
   MIDI.begin();
   MIDI.setHandleNoteOff(OnNoteOff);
   MIDI.setHandleNoteOn(OnNoteOn);
+
+
+  sgtl5000_1.enable();
+  sgtl5000_1.volume(0.32);
 
   // Init device NervousSuperMother
   byte controls[3] = {0,1,4};
@@ -84,7 +101,7 @@ void setup() {
 
   // Set the handlers
   for (int i=0;i<ANALOG_CONTROL_PINS;i++){
-    device->setHandlePotentiometerChange(i, onPotentiometer);
+    device->setHandleMuxControlChange(i, onMuxControl);
   }
   device->setHandlePress(0, onButtonPress);
   device->setHandleLongPress(0, onButtonLongPress);
@@ -98,10 +115,10 @@ void setup() {
   device->updateEncodeursMaxValue(1, 30);
   device->setHandleTrigger(0, onTrigger);
   device->setHandleTrigger(1, onTrigger);
-  device->setHandleTrigger(2, onTrigger);
-  device->setHandleTrigger(3, onTrigger);
-  device->setHandleTrigger(4, onTrigger);
-  device->setHandleTrigger(5, onTrigger);
+  device->setHandleCVChange(2, onCV);
+  device->setHandleCVChange(3, onCV);
+  device->setHandleCVChange(4, onCV);
+  device->setHandleCVChange(5, onCV);
 
   // Starting animation
   lcd.setCursor(0,0);

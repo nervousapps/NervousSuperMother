@@ -6,9 +6,9 @@ This work is inspired (a lot) by https://github.com/ghostintranslation work on h
 
 Thanks for that great inspiring work !
 
-Platform built around Teensy 3.5/3.6.
+Platform built around Teensy 3.5/3.6 and adapted for 4.1 with DaddyBoard addon PCB.
 
-It is mainly a development platform using almost all the ports on Teensy.
+It is mainly a development platform using almost all ports of Teensy.
 
 # ModularGrid : https://www.modulargrid.net/e/other-unknown-nervoussupersynth
 
@@ -23,10 +23,11 @@ It is mainly a development platform using almost all the ports on Teensy.
 ![Image of NervousSuperSynth monster vs proto_1 4](https://github.com/nervousapps/NervousSuperSynth/blob/proto_1/images/monstervsproto1_4.png)
 
 # I/O
-- 6 trigger/gate input
+- 2 trigger/gate input
+- 4 CV input
 - MIDI IN
-- DAC0 output
-- DAC1 output with analog volume control
+- SGTL5000 input
+- SGTL5000 output with analog volume control
 - PT8211 DAC stereo output
 - LED screen 20x2 with contrast control
 
@@ -42,6 +43,9 @@ It is mainly a development platform using almost all the ports on Teensy.
 - RESET
 - PROGRAM
 
+# Driver
+https://github.com/nervousapps/NervousSuperMother/tree/withdaddy
+
 # Firmware
 There are several firmwares for this motherboard:
 - NervousSuperSynth (https://github.com/nervousapps/NervousSuperSynth/tree/common_base)
@@ -51,11 +55,18 @@ There are several firmwares for this motherboard:
 PlatformIO or Teensyduino
 
 # SCHEMATICS & PCB
-https://easyeda.com/xtreemechille/supersynth-copy
+NervousSuperMother : https://oshwlab.com/xtreemechille/supersynth-copy
+![Image of NervousSuperSynth monster vs proto_1 3](https://image.easyeda.com/histories/3226f8f64cd142eb9272e89193aaf473.png)
+
+SuperDaddyBoard : https://oshwlab.com/xtreemechille/supersynth-copy_copy
+![Image of NervousSuperSynth monster vs proto_1 3](https://image.easyeda.com/histories/089716ea3f2345f78fa68dfbae1b574d.png)
 
 SMD and TH parts, one PCB.
 
 I have some PCBs in stock, assembled, kit or bare, contact me at nervousrvoltage@icloud.com if you are interested.
+
+# HARDWARE FIX
+- One slider is not connected
 
 # BOM
 https://docs.google.com/spreadsheets/d/1-4hl6AcAoJYJrRvISyrwIaEGTYHwAB_IcKs__rtEGYY/edit?usp=sharing

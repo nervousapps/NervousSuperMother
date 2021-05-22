@@ -2,11 +2,11 @@
 #define Display_h
 
 #include "Arduino.h"
-#include <LiquidCrystalFast.h>
+#include <LiquidCrystal.h>
 
 // initialize the library with the numbers of the interface pins
 // LiquidCrystal lcd(RS, RW, Enable, D4, D5, D6, D7)
-LiquidCrystalFast lcd(DISPLAY_RS, DISPLAY_RW, DISPLAY_E, DISPLAY_DB4, DISPLAY_DB5, DISPLAY_DB6, DISPLAY_DB7);
+LiquidCrystal lcd(DISPLAY_RS, DISPLAY_RW, DISPLAY_E, DISPLAY_DB4, DISPLAY_DB5, DISPLAY_DB6, DISPLAY_DB7);
 
 int LCD_NB_COLUMNS = 20;
 

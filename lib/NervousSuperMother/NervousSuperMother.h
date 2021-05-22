@@ -16,13 +16,13 @@ private:
 
   byte *inputs;
 
-  byte ioNumber = 6;
+  byte ioNumber = 7;
   byte currentInput = 0;
   byte analogResolution = analogResolution;
 
   // Switches
-  unsigned int *switches;
-  unsigned int *switchesPrevious;
+  bool *switches;
+  bool *switchesPrevious;
   byte switchIndex;
   // Mux Controls
   unsigned int *muxcontrols;
@@ -57,7 +57,7 @@ private:
   using DoublePressCallback = void (*)(byte);
   DoublePressCallback *inputsDoublePressCallback;
   elapsedMillis *inputsPressTime;
-  using SwitchChangeCallback = void (*)(byte, unsigned int, int);
+  using SwitchChangeCallback = void (*)(byte, bool);
   SwitchChangeCallback *inputsSwitchesChangeCallback;
   using MuxControlChangeCallback = void (*)(byte, unsigned int, int);
   MuxControlChangeCallback *inputsMuxControlsChangeCallback;
@@ -67,7 +67,8 @@ private:
   TriggerCallback *inputsTriggerCallback;
   using CVChangeCallback = void (*)(byte, unsigned int, int);
   CVChangeCallback *inputsCVChangeCallback;
-
+  using volChangeCallback = void (*)(float);
+  volChangeCallback inputsvolChangeCallback;
 
   void readSwitch(byte inputIndex);
   void readMux();
@@ -79,11 +80,14 @@ private:
 
   // Main clock
   elapsedMicros clockMain;
-  const unsigned int intervalClockMain = 10000;
-
+  const unsigned int intervalClockMain = 5000;
+  // Display clock
+  const unsigned int intervalDisplay = 1000;
+  elapsedMicros clockDisplay;
   // Inputs clock
-  const unsigned int intervalInputs = 500;
+  const unsigned int intervalInputs = 100;
   elapsedMicros clockInputs;
+
 
 public:
   static NervousSuperMother *getInstance();
@@ -107,6 +111,7 @@ public:
   void setHandleEncoderChange(byte inputIndex, EncoderChangeCallback fptr);
   void setHandleTrigger(byte inputIndex, TriggerCallback fptr);
   void setHandleCVChange(byte inputIndex, CVChangeCallback fptr);
+  void setHandleVolChange(volChangeCallback fptr);
 };
 
 // Instance pre init
@@ -123,8 +128,8 @@ inline NervousSuperMother::NervousSuperMother(){
 
   // Switches
   this->switchIndex = 0;
-  this->switches = new unsigned int[ANALOG_CONTROL_PINS];
-  this->switchesPrevious = new unsigned int[ANALOG_CONTROL_PINS];
+  this->switches = new bool[ANALOG_CONTROL_PINS];
+  this->switchesPrevious = new bool[ANALOG_CONTROL_PINS];
   this->inputsSwitchesChangeCallback = new SwitchChangeCallback[ANALOG_CONTROL_PINS];
 
   for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
@@ -216,8 +221,8 @@ inline NervousSuperMother *NervousSuperMother::getInstance()    {
 */
 inline void NervousSuperMother::init(byte *inputs){
   // Configure the ADCs
-  analogReadResolution(analogResolution);
-  analogReadAveraging(analogResolution);
+  // analogReadResolution(analogResolution);
+  // analogReadAveraging(analogResolution);
   // analogReference(EXTERNAL);
 
   for(byte i = 0; i < this->ioNumber; i++){
@@ -231,12 +236,16 @@ inline void NervousSuperMother::init(byte *inputs){
 * Update
 */
 inline void NervousSuperMother::update(){
+  this->readMux();
   // Main clock
   if (this->clockMain >= this->intervalClockMain) {
     this->clockMain = 0;
   }
   if (this->clockMain > this->intervalClockMain / 2) {
-    return;
+   if (this->clockDisplay >= this->intervalDisplay) {
+     this->refreshDisplay();
+     this->clockDisplay = 0;
+   }
   }else{
     // AudioNoInterrupts();
     // Inputs
@@ -271,10 +280,6 @@ inline void NervousSuperMother::readCurrentInput(){
     break;
 
     case 1:
-    readMux();
-    break;
-
-    case 2:
     if(this->switchIndex < ANALOG_CONTROL_PINS) {
       this->readSwitch(this->switchIndex);
       this->switchIndex ++;
@@ -283,7 +288,7 @@ inline void NervousSuperMother::readCurrentInput(){
     }
     break;
 
-    case 3:
+    case 2:
     if(this->buttonIndex < BUTTON_PINS) {
       this->readButton(this->buttonIndex);
       this->buttonIndex ++;
@@ -292,7 +297,7 @@ inline void NervousSuperMother::readCurrentInput(){
     }
     break;
 
-    case 4:
+    case 3:
     if(this->encoderIndex < NB_ENCODER) {
       this->readEncoder(this->encoderIndex);
       this->encoderIndex ++;
@@ -301,7 +306,7 @@ inline void NervousSuperMother::readCurrentInput(){
     }
     break;
 
-    case 5:
+    case 4:
     if(this->triggerIndex < TRIGGER_PINS) {
       this->readTrigger(this->triggerIndex);
       this->triggerIndex ++;
@@ -310,8 +315,20 @@ inline void NervousSuperMother::readCurrentInput(){
     }
     break;
 
+    case 5:
+    if(this->cvIndex < CV_PINS) {
+      this->readCV(this->cvIndex);
+      this->cvIndex ++;
+    }else {
+      this->cvIndex = 0;
+    }
+    break;
+
     case 6:
-    this->refreshDisplay();
+    volPot.update();
+    if(volPot.hasChanged()){
+      this->inputsvolChangeCallback(volPot.getValue());
+    }
     break;
   }
 }
@@ -323,12 +340,18 @@ inline void NervousSuperMother::readCurrentInput(){
 inline void NervousSuperMother::readSwitch(byte inputIndex){
   analog_controls[inputIndex].update();
   if(analog_controls[inputIndex].hasChanged()){
-    this->switches[inputIndex] = analog_controls[inputIndex].getValue();
+    int val = analog_controls[inputIndex].getValue();
+
+    if(val > 50){
+      this->switches[inputIndex] = true;
+    }else{
+      this->switches[inputIndex] = false;
+    }
 
     if(this->switches[inputIndex] != this->switchesPrevious[inputIndex]){
       // Calling the potentiometer callback if there is one
       if(this->inputsSwitchesChangeCallback[inputIndex] != nullptr){
-        this->inputsSwitchesChangeCallback[inputIndex](inputIndex, this->switches[inputIndex], this->switches[inputIndex] - this->switchesPrevious[inputIndex] );
+        this->inputsSwitchesChangeCallback[inputIndex](inputIndex, this->switches[inputIndex]);
       }
     }
     this->switchesPrevious[inputIndex] = this->switches[inputIndex];
@@ -341,24 +364,35 @@ inline void NervousSuperMother::readSwitch(byte inputIndex){
 */
 inline void NervousSuperMother::readMux() {
   static byte muxInput = 0;
+  static int muxValues[MnumControls] = {};
+  // Mux clock
+  static unsigned long clockMux = 0;
+  unsigned long intervalMux = micros();
 
-  // TODO : Test if it can be done with ResponsiveAnalogRead as readSwitch
-  this->muxcontrols[muxInput] = analogRead(MZ);
+  if(intervalMux - clockMux >= 1000){
+    clockMux = intervalMux;
+    // TODO : Test if it can be done with ResponsiveAnalogRead as readSwitch
+    int muxRead = analogRead(MZ);
 
-  if(this->muxcontrols[muxInput] != this->muxcontrolsPrevious[muxInput]){
-    // Calling the potentiometer callback if there is one
-    if(this->inputsMuxControlsChangeCallback[muxInput] != nullptr){
-      this->inputsMuxControlsChangeCallback[muxInput](muxInput, this->muxcontrols[muxInput], this->muxcontrols[muxInput] - this->muxcontrolsPrevious[muxInput] );
+    if (muxRead > (muxValues[muxInput] + 7) || muxRead < (muxValues[muxInput] - 7)) {
+      muxValues[muxInput] = muxRead;
+      muxRead = (muxRead >> 3); //Change range to 0-127
+      this->muxcontrols[muxInput] = muxRead;
+      if(this->muxcontrols[muxInput] != this->muxcontrolsPrevious[muxInput]){
+        // Calling the potentiometer callback if there is one
+        if(this->inputsMuxControlsChangeCallback[muxInput] != nullptr){
+          this->inputsMuxControlsChangeCallback[muxInput](muxInput, this->muxcontrols[muxInput], this->muxcontrols[muxInput] - this->muxcontrolsPrevious[muxInput] );
+        }
+      }
+      this->muxcontrolsPrevious[muxInput] = this->muxcontrols[muxInput];
     }
+    muxInput++;
+    if (muxInput >= MnumControls) muxInput = 0;
+    digitalWrite(MS0, muxInput & B0001);
+    digitalWrite(MS1, muxInput & B0010);
+    digitalWrite(MS2, muxInput & B0100);
+    digitalWrite(MS3, muxInput & B1000);
   }
-  this->muxcontrolsPrevious[muxInput] = this->muxcontrols[muxInput];
-
-  muxInput++;
-  if (muxInput >= MnumControls) muxInput = 0;
-  digitalWrite(MS0, muxInput & B0001);
-  digitalWrite(MS1, muxInput & B0010);
-  digitalWrite(MS2, muxInput & B0100);
-  digitalWrite(MS3, muxInput & B1000);
 }
 
 /**
@@ -406,6 +440,13 @@ inline int NervousSuperMother::getAnalogMinValue(){
 */
 inline int NervousSuperMother::getAnalogMaxValue(){
   return (1 << this->analogResolution) - 1;
+}
+
+/**
+* Handle volume pot
+*/
+inline void NervousSuperMother::setHandleVolChange(volChangeCallback fptr){
+  this->inputsvolChangeCallback = fptr;
 }
 
 /**
@@ -574,7 +615,6 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
     cv_controls[inputIndex].update();
     if(cv_controls[inputIndex].hasChanged()){
       this->cvs[inputIndex] = cv_controls[inputIndex].getValue();
-
       if(this->cvs[inputIndex] != this->cvsPrevious[inputIndex]){
         // Calling the potentiometer callback if there is one
         if(this->inputsCVChangeCallback[inputIndex] != nullptr){

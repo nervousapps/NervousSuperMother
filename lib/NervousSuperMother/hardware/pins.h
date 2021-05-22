@@ -35,10 +35,10 @@
 #define DISPLAY_DB7	  37
 
 //Mux Pins
-#define MS0 A11
-#define MS1 A12
-#define MS2 A13
-#define MS3 A14
+#define MS0 25
+#define MS1 26
+#define MS2 27
+#define MS3 38
 #define MZ A10
 #define MnumControls 15
 

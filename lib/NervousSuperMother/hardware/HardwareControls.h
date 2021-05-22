@@ -14,6 +14,8 @@
 
 const byte analogResolution = 10;
 
+ResponsiveAnalogRead volPot(A1, true);
+
 // ******ANALOG CONSTANT VALUES********
 const int ANALOG_CONTROL_PINS = 3;
 const int ANALOG_CONTROL[ANALOG_CONTROL_PINS] = {

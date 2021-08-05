@@ -14,8 +14,6 @@
 
 const byte analogResolution = 10;
 
-ResponsiveAnalogRead volPot(A1, true);
-
 // ******ANALOG CONSTANT VALUES********
 const int ANALOG_CONTROL_PINS = 3;
 const int ANALOG_CONTROL[ANALOG_CONTROL_PINS] = {
@@ -73,12 +71,18 @@ const int CVs[CV_PINS] = {
 
 //************INITIALIZE LIBRARY OBJECTS**************
 
-// initialize the ReponsiveAnalogRead objects
+// initialize the ReponsiveAnalogRead objects for switches
 ResponsiveAnalogRead analog_controls[]{
   {ANALOG_CONTROL[0],true},
   {ANALOG_CONTROL[1],true},
   {ANALOG_CONTROL[2],true}
 };
+
+// initialize the ReponsiveAnalogRead objects for muxer controls
+ResponsiveAnalogRead mux_read(MZ, true);
+
+// initialize the ReponsiveAnalogRead objects for volume pot
+ResponsiveAnalogRead volPot(VOLPIN, true);
 
 // initialize the CVs
 ResponsiveAnalogRead cv_controls[]{

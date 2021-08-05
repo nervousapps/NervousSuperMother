@@ -20,6 +20,8 @@
 // Triggers
 #define TRIG1	        10
 #define TRIG2	        11
+
+// CVs
 #define CV1	          A0
 #define CV2	          A2
 #define CV3	          A3
@@ -42,6 +44,9 @@
 #define MZ A10
 #define MnumControls 15
 
+// Volume pin
+#define VOLPIN   A1
+
 // Switches
 #define SW1	          A15
 #define SW2	          A16
@@ -52,16 +57,16 @@
 #define SLIDE2	      1
 #define SLIDE3	      2
 #define SLIDE4	      3
-#define SLIDE5	      4
-#define SLIDE6	      5
-#define SLIDE7	      6
-#define SLIDE8	      7
-#define SLIDE9	      8
-#define SLIDE10	      9
+#define SLIDE5	      8
+#define SLIDE6	      9
+#define SLIDE7	      10
+#define SLIDE8	      11
+#define SLIDE9	      4
+#define SLIDE10	      5
 
 // Potentiometers
-#define POT1	        10
-#define POT2	        11
+#define POT1	        6
+#define POT2	        7
 #define POT3	        12
 #define POT4	        13
 #define POT5	        14

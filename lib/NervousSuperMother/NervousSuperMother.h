@@ -648,34 +648,20 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   */
   inline void NervousSuperMother::refreshDisplay() {
     if(this->display_line_1 != this->previous_display_line_1 || this->display_line_2 != this->previous_display_line_2){
-      byte j = 0;
-      for(byte i = 0; i < this->display_line_1.length(); i++){
-        if(this->previous_display_line_1[i] != this->display_line_1[i]){
-          lcd.setCursor(i, 0);
-          lcd.print(this->display_line_1[i]);
-        }
-        j = i+1;
-      }
-      if(j < 20){
-        for(byte i = j; i < 20; i++){
-          lcd.setCursor(i, 0);
-          lcd.print(" ");
+      if(this->display_line_1.length() < 20){
+        for(byte i = this->display_line_1.length(); i < 20; i++){
+          this->display_line_1 = this->display_line_1 + " ";
         }
       }
-      j = 0;
-      for(byte i = 0; i < this->display_line_2.length(); i++){
-        if(this->previous_display_line_2[i] != this->display_line_2[i]){
-          lcd.setCursor(i, 1);
-          lcd.print(this->display_line_2[i]);
-        }
-        j = i+1;
-      }
-      if(j < 20){
-        for(byte i = j; i < 20; i++){
-          lcd.setCursor(i, 1);
-          lcd.print(" ");
+      if(this->display_line_2.length() < 20){
+        for(byte i = this->display_line_2.length(); i < 20; i++){
+          this->display_line_2 = this->display_line_2 + " ";
         }
       }
+      lcd.setCursor(0, 0);
+      lcd.print(this->display_line_1);
+      lcd.setCursor(0, 1);
+      lcd.print(this->display_line_2);
       this->previous_display_line_1 = this->display_line_1;
       this->previous_display_line_2 = this->display_line_2;
     }

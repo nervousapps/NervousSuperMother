@@ -5,26 +5,30 @@
 #include <SD.h>
 #include <SerialFlash.h>
 #include <Audio.h>
+#include "custom-objects/CustomAudioObjects.h"
 #include <mtof.h>
 #include <math.h>
 
 // GUItool: begin automatically generated code
-AudioSynthSimpleDrum     drum1;          //xy=308,171
-AudioSynthWaveform       waveform1;      //xy=309,282
+AudioPlayClip            playclip1;      //xy=308,171
 AudioAmplifier           amp1;           //xy=526,155
-AudioAmplifier           amp3;           //xy=526,266
 AudioControlSGTL5000     sgtl5000_1;
 AudioOutputI2S           i2s1;           //xy=686,170
 AudioInputI2S            i2s2;           //xy=361,355
 AudioOutputPT8211_2      pt8211_2_1;     //xy=703,281
-AudioConnection          patchCord1(drum1, amp1);
-AudioConnection          patchCord2(waveform1, amp3);
-AudioConnection          patchCord3(amp1, 0, i2s1, 0);
-AudioConnection          patchCord4(amp1, 0, i2s1, 1);
+AudioConnection          patchCord1(playclip1, amp1);
+AudioConnection          patchCord2(amp1, 0, i2s1, 0);
+AudioConnection          patchCord3(amp1, 0, i2s1, 1);
 // AudioConnection          patchCord5(waveform1, 0, pt8211_2_1, 0);
 // AudioConnection          patchCord6(waveform1, 0, pt8211_2_1, 1);
 AudioConnection          inputPatchchCord1(i2s2, 0, pt8211_2_1, 0);
 AudioConnection          inputPatchchCord2(i2s2, 1, pt8211_2_1, 1);
+
+
+// Charge wav to array block
+AudioRecordClip          recordclip;
+AudioPlaySdWav           inputwav;
+AudioConnection          inputWavCon1(inputwav, recordclip);
 // GUItool: end automatically generated code
 
 #include <NervousSuperMother.h>
@@ -38,13 +42,19 @@ void onMuxControl(byte inputIndex, unsigned int value, int diffToPrevious) {
   String line = "";
   switch(inputIndex){
     case SLIDE1:
-    line = "SLIDE1";
+    line = "setStartPoint";
+    value = float(value/127);
+    playclip1.setStartPoint(value);
     break;
     case SLIDE2:
-    line = "SLIDE2";
+    line = "setEndPoint";
+    value = float(value/127);
+    playclip1.setEndPoint(value);
     break;
     case SLIDE3:
-    line = "SLIDE3";
+    line = "setSpeed";
+    value = float(value/127);
+    playclip1.setSpeed(value);
     break;
     case SLIDE4:
     line = "SLIDE4";
@@ -109,7 +119,7 @@ void onTrigger(byte inputIndex) {
   Serial.println(inputIndex);
   String line = "Trigger ! : " + String(inputIndex);
   device->updateLine(1, line);
-  drum1.noteOn();
+  playclip1.play();
 }
 
 float pitch_offset = 1;
@@ -122,7 +132,6 @@ float mapping_upper_limit = (max_voltage_of_adc / voltage_division_ratio) * note
 void onCV(byte inputIndex, unsigned int value, int diffToPrevious) {
   float pitch = pitch_offset + map(value,1024,0, 0.0, mapping_upper_limit);
   float freq = mtof.toFrequency(pitch);
-  waveform1.frequency(freq);
   Serial.print("CV : ");
   Serial.println(inputIndex);
   String line = "CV " + String(inputIndex) + " : " + String(value)+ " : " + String(pitch);
@@ -136,6 +145,21 @@ void onButtonPress(byte inputIndex) {
   Serial.println(inputIndex);
   String line = "Button short press " + String(inputIndex);
   device->updateLine(1, line);
+
+  recordclip.startRecording();
+  inputwav.play("test.wav");
+
+  int i = 0;
+  while(inputwav.isPlaying()){
+    // Starting animation
+    lcd.setCursor(0,0);
+    lcd.print("!  Loading sample  !");
+    draw_progressbar(i);
+    delay(2);
+    i++;
+  }
+  recordclip.stopRecording();
+  playclip1.setClip(recordclip.getClip(), recordclip.getClipLength());
 }
 
 void onButtonLongPress(byte inputIndex) {
@@ -171,7 +195,6 @@ void OnNoteOn(byte channel, byte note, byte velocity) {
   String line = "MIDI " + String(channel) + " : " + String(note);
   Serial.println(line);
   device->updateLine(2, line);
-  waveform1.frequency(note);
 }
 
 void onVolChange(float value) {
@@ -180,7 +203,6 @@ void onVolChange(float value) {
   // device->updateLine(2, line);
   // AudioNoInterrupts();
   amp1.gain(value/1000.0);
-  amp3.gain(value/1000.0);
   // sgtl5000_1.lineOutLevel(value/1000.0);
   // AudioInterrupts();
   // draw_progressbar(value/10);
@@ -219,16 +241,8 @@ void setup() {
   sgtl5000_1.enhanceBassEnable();
 
   amp1.gain(0.5);
-  amp3.gain(0.5);
-
-  drum1.frequency(60);
-  drum1.length(1500);
-  drum1.secondMix(0.0);
-  drum1.pitchMod(0.55);
 
   AudioInterrupts();
-
-  waveform1.begin(1.0, 60, WAVEFORM_SAWTOOTH);
 
   // Init device NervousSuperMother
   byte controls[7] = {0,1,2,3,4,5,6};

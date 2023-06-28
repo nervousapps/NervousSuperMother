@@ -177,7 +177,7 @@ void OnNoteOn(byte channel, byte note, byte velocity) {
 void onVolChange(float value) {
   String line = "VOL : " + String(value);
   Serial.println(line);
-  // device->updateLine(2, line);
+  device->updateLine(2, line);
   // AudioNoInterrupts();
   amp1.gain(value/1000.0);
   amp3.gain(value/1000.0);
@@ -235,7 +235,7 @@ void setup() {
   device->init(controls);
 
   // Set the handlers
-  for (int i=0;i<1;i++){
+  for (int i=0;i<MnumControls;i++){
     device->setHandleMuxControlChange(i, onMuxControl);
   }
   device->setHandlePress(0, onButtonPress);

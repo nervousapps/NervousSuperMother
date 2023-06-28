@@ -331,7 +331,7 @@ inline void NervousSuperMother::readCurrentInput(){
     case 2:
     if(this->buttonIndex < BUTTON_PINS) {
       this->readButton(this->buttonIndex);
-      // this->buttonIndex ++;
+      this->buttonIndex ++;
     }else {
       this->buttonIndex = 0;
     }

@@ -6,7 +6,7 @@
 
 /*
 * NervousSuperMother(withDaddy)
-* v0.2.0 beta
+* v0.3.0 beta
 */
 class NervousSuperMother{
 
@@ -63,8 +63,10 @@ private:
   MuxControlChangeCallback *inputsMuxControlsChangeCallback;
   using EncoderChangeCallback = void (*)(byte, long);
   EncoderChangeCallback *inputsEncoderChangeCallback;
-  using TriggerCallback = void (*)(byte);
-  TriggerCallback *inputsTriggerCallback;
+  using FallingTriggerCallback = void (*)(byte);
+  FallingTriggerCallback *inputsFallingTriggerCallback;
+  using RisingTriggerCallback = void (*)(byte);
+  RisingTriggerCallback *inputsRisingTriggerCallback;
   using CVChangeCallback = void (*)(byte, unsigned int, int);
   CVChangeCallback *inputsCVChangeCallback;
   using volChangeCallback = void (*)(float);
@@ -101,6 +103,7 @@ public:
   void updateEncodeursMaxValue(byte index, long encoderMax);
   void updateEncodeursValue(byte inputIndex, long encoderValue);
   void updateLine(byte line_nb, String line);
+  void resetHandlers();
 
   // Callbacks
   void setHandlePress(byte inputIndex, PressCallback fptr);
@@ -109,7 +112,8 @@ public:
   void setHandleSwitchChange(byte inputIndex, SwitchChangeCallback fptr);
   void setHandleMuxControlChange(byte inputIndex, MuxControlChangeCallback fptr);
   void setHandleEncoderChange(byte inputIndex, EncoderChangeCallback fptr);
-  void setHandleTrigger(byte inputIndex, TriggerCallback fptr);
+  void setHandleFallingTrigger(byte inputIndex, FallingTriggerCallback fptr);
+  void setHandleRisingTrigger(byte inputIndex, RisingTriggerCallback fptr);
   void setHandleCVChange(byte inputIndex, CVChangeCallback fptr);
   void setHandleVolChange(volChangeCallback fptr);
 };
@@ -120,7 +124,7 @@ NervousSuperMother * NervousSuperMother::instance = nullptr;
 /**
 * Constructor
 */
-inline NervousSuperMother::NervousSuperMother(){
+FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->inputs = new byte[this->ioNumber];
   for(byte i = 0; i < this->ioNumber; i++){
     this->inputs[i] = 0;
@@ -183,9 +187,13 @@ inline NervousSuperMother::NervousSuperMother(){
 
   // Triggers
   this->triggerIndex = 0;
-  this->inputsTriggerCallback = new TriggerCallback[TRIGGER_PINS];
+  this->inputsFallingTriggerCallback = new FallingTriggerCallback[TRIGGER_PINS];
   for(byte i = 0; i < TRIGGER_PINS; i++){
-    this->inputsTriggerCallback[i] = nullptr;
+    this->inputsFallingTriggerCallback[i] = nullptr;
+  }
+  this->inputsRisingTriggerCallback = new RisingTriggerCallback[TRIGGER_PINS];
+  for(byte i = 0; i < TRIGGER_PINS; i++){
+    this->inputsRisingTriggerCallback[i] = nullptr;
   }
 
   // CVs
@@ -210,7 +218,7 @@ inline NervousSuperMother::NervousSuperMother(){
 /**
 * Singleton instance
 */
-inline NervousSuperMother *NervousSuperMother::getInstance()    {
+FLASHMEM inline NervousSuperMother *NervousSuperMother::getInstance()    {
   if (!instance)
   instance = new NervousSuperMother;
   return instance;
@@ -219,12 +227,49 @@ inline NervousSuperMother *NervousSuperMother::getInstance()    {
 /**
 * Init
 */
-inline void NervousSuperMother::init(byte *inputs){
+FLASHMEM inline void NervousSuperMother::init(byte *inputs){
   for(byte i = 0; i < this->ioNumber; i++){
     this->inputs[i] = inputs[i];
   }
   setup_hardware_controls();
   setup_lcd();
+}
+
+/**
+* Reset
+*/
+inline void NervousSuperMother::resetHandlers(){
+  // Reset switch handlers
+  // for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
+  //   this->switches[i] = 0;
+  //   this->switchesPrevious[i] = 0;
+  //   this->inputsSwitchesChangeCallback[i] = nullptr;
+  // }
+
+  // Reset muxers handlers
+  for(byte i = 0; i < MnumControls; i++){
+    this->muxcontrols[i] = 0;
+    this->muxcontrolsPrevious[i] = 0;
+    this->inputsMuxControlsChangeCallback[i] = nullptr;
+  }
+
+  // Reset buttons handlers
+  for(byte i = 0; i < BUTTON_PINS; i++){
+    this->buttons[i] = true;
+    this->pushed[i] = false;
+    this->inputsPressCallback[i] = nullptr;
+    this->inputsLongPressCallback[i] = nullptr;
+    this->inputsDoublePressCallback[i] = nullptr;
+    this->inputsPressTime[i] = 0;
+  }
+
+  // Reset encoders handlers
+  for(byte i = 0; i < NB_ENCODER; i++){
+    this->encoders[i] = 0;
+    this->encodersPrevious[i] = -999;
+    this->inputsEncoderChangeCallback[i] = nullptr;
+    this->encodersMaxValue[i] = 0;
+  }
 }
 
 /**
@@ -238,7 +283,7 @@ inline void NervousSuperMother::update(){
   }
   if (this->clockMain > this->intervalClockMain / 2) {
    if (this->clockDisplay >= this->intervalDisplay) {
-     this->refreshDisplay();
+     // this->refreshDisplay();
      this->clockDisplay = 0;
    }
   }else{
@@ -286,7 +331,7 @@ inline void NervousSuperMother::readCurrentInput(){
     case 2:
     if(this->buttonIndex < BUTTON_PINS) {
       this->readButton(this->buttonIndex);
-      this->buttonIndex ++;
+      // this->buttonIndex ++;
     }else {
       this->buttonIndex = 0;
     }
@@ -591,17 +636,29 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   inline void NervousSuperMother::readTrigger(byte inputIndex){
     digital_trigger[inputIndex].update();
     if (digital_trigger[inputIndex].fallingEdge()) {
-      if(this->inputsTriggerCallback[inputIndex] != nullptr){
-        this->inputsTriggerCallback[inputIndex](inputIndex);
+      if(this->inputsFallingTriggerCallback[inputIndex] != nullptr){
+        this->inputsFallingTriggerCallback[inputIndex](inputIndex);
+      }
+    }
+    if (digital_trigger[inputIndex].risingEdge()) {
+      if(this->inputsRisingTriggerCallback[inputIndex] != nullptr){
+        this->inputsRisingTriggerCallback[inputIndex](inputIndex);
       }
     }
   }
 
   /**
-  * Handle trigger
+  * Handle falling trigger
   */
-  inline void NervousSuperMother::setHandleTrigger(byte inputIndex, TriggerCallback fptr){
-    this->inputsTriggerCallback[inputIndex] = fptr;
+  inline void NervousSuperMother::setHandleFallingTrigger(byte inputIndex, FallingTriggerCallback fptr){
+    this->inputsFallingTriggerCallback[inputIndex] = fptr;
+  }
+
+  /**
+  * Handle rising trigger
+  */
+  inline void NervousSuperMother::setHandleRisingTrigger(byte inputIndex, RisingTriggerCallback fptr){
+    this->inputsRisingTriggerCallback[inputIndex] = fptr;
   }
 
   /**
@@ -638,8 +695,27 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   inline void NervousSuperMother::updateLine(byte line_nb, String line) {
     if(line_nb == 1){
       this->display_line_1 = line;
+      if(this->display_line_1.length() < 20){
+        for(byte i = this->display_line_1.length(); i < 20; i++){
+          this->display_line_1 = this->display_line_1 + " ";
+        }
+      }
+      lcd.setCursor(0, 0);
+      lcd.print(this->display_line_1);
     }else if(line_nb == 2){
       this->display_line_2 = line;
+      if(this->display_line_2.length() < 20){
+        for(byte i = this->display_line_2.length(); i < 20; i++){
+          this->display_line_2 = this->display_line_2 + " ";
+        }
+      }
+      lcd.setCursor(0, 1);
+      lcd.print(this->display_line_2);
+    }else if(line_nb == -1){
+      lcd.setCursor(0, 0);
+      lcd.print(this->display_line_1);
+      lcd.setCursor(0, 1);
+      lcd.print(this->display_line_2);
     }
   }
 
@@ -647,22 +723,24 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   * Refresh the display
   */
   inline void NervousSuperMother::refreshDisplay() {
-    if(this->display_line_1 != this->previous_display_line_1 || this->display_line_2 != this->previous_display_line_2){
+    if(this->display_line_1 != this->previous_display_line_1){
       if(this->display_line_1.length() < 20){
         for(byte i = this->display_line_1.length(); i < 20; i++){
           this->display_line_1 = this->display_line_1 + " ";
         }
       }
+      lcd.setCursor(0, 0);
+      lcd.print(this->display_line_1);
+      this->previous_display_line_1 = this->display_line_1;
+    }
+    if(this->display_line_2 != this->previous_display_line_2){
       if(this->display_line_2.length() < 20){
         for(byte i = this->display_line_2.length(); i < 20; i++){
           this->display_line_2 = this->display_line_2 + " ";
         }
       }
-      lcd.setCursor(0, 0);
-      lcd.print(this->display_line_1);
       lcd.setCursor(0, 1);
       lcd.print(this->display_line_2);
-      this->previous_display_line_1 = this->display_line_1;
       this->previous_display_line_2 = this->display_line_2;
     }
   }

@@ -109,7 +109,7 @@ Encoder encoders_knob[] = {
   Encoder(ENC2_1, ENC2_2)
 };
 
-void setup_hardware_controls(){
+FLASHMEM void setup_hardware_controls(){
   // loop to configure input pins and internal pullup resisters for digital section
   for (int i=0;i<BUTTON_PINS;i++){
     pinMode(BUTTONS[i], INPUT_PULLUP);

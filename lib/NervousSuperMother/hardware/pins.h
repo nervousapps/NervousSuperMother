@@ -10,7 +10,7 @@
 #define U7_WS	      3
 
 // Encoders
-#define ENC1_1	      1
+#define ENC1_1	      32
 #define ENC1_2	      29
 #define ENC1_SW	      30
 #define ENC2_1	      5
@@ -29,7 +29,6 @@
 
 // Display
 #define DISPLAY_RS	  31
-#define DISPLAY_RW	  32
 #define DISPLAY_E	    33
 #define DISPLAY_DB4	  34
 #define DISPLAY_DB5	  35

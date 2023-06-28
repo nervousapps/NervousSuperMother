@@ -67,9 +67,9 @@ I have some PCBs in stock, assembled, kit or bare, contact me at nervousrvoltage
 
 # HARDWARE FIX
 - One slider is not connected
-- Forget the resistors connected to -5V for CVs, workaround with TL431
+- Forgot resistors connected to -5V for CVs, workaround with TL431
 - R/W display pin must be connected to ground
-- Encoder on teensy pin D1/X1 can be connected to pin D32
+- Encoder on teensy pin D1/X1 MUST be connected to pin D32 (serial port conflict)
 
 # BOM
 https://docs.google.com/spreadsheets/d/1-4hl6AcAoJYJrRvISyrwIaEGTYHwAB_IcKs__rtEGYY/edit?usp=sharing

@@ -190,7 +190,7 @@ void setup() {
   Serial.begin(9600);
 
   // Set TX of Serial1 to 53 instead of 1 as encoder 1 uses that pin.
-  Serial1.setTX(53);
+  // Serial1.setTX(53);
 
   while (!Serial && millis() < 2500); // wait for serial monitor
 
@@ -248,8 +248,8 @@ void setup() {
   device->setHandleEncoderChange(1, onEncoder);
   device->updateEncodeursMaxValue(0, -50);
   device->updateEncodeursMaxValue(1, 30);
-  device->setHandleTrigger(0, onTrigger);
-  device->setHandleTrigger(1, onTrigger);
+  device->setHandleRisingTrigger(0, onTrigger);
+  device->setHandleRisingTrigger(1, onTrigger);
   device->setHandleCVChange(0, onCV);
   device->setHandleCVChange(1, onCV);
   device->setHandleCVChange(2, onCV);
@@ -265,12 +265,9 @@ void setup() {
   MIDI.setHandleNoteOn(OnNoteOn);
 
   // Starting animation
-  lcd.setCursor(0,0);
-  lcd.print("!    SuperSynth    !");
-  for(int i=0; i<100; i++){
-    draw_progressbar(i);
-    delay(2);
-  }
+  String starting_message = "! NervouSuperSynth !";
+  draw_starting_animation(starting_message, 25);
+  delay(1000);
 
 }
 

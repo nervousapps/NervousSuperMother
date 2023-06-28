@@ -1,4 +1,4 @@
-# NervousSuperMother
+# NervousSuperMother - SamplePlayer
 
 Current version : 0.2.0
 
@@ -50,6 +50,7 @@ https://github.com/nervousapps/NervousSuperMother/tree/withdaddy
 There are several firmwares for this motherboard:
 - NervousSuperSynth (https://github.com/nervousapps/NervousSuperSynth/tree/common_base)
 - MicroDexed (https://codeberg.org/nervousapps/MicroDexed/src/branch/nervoussupermother)
+- SamplePlayer (this)
 
 # Compilation
 PlatformIO or Teensyduino
@@ -82,3 +83,10 @@ I made the panel here : https://www.john-steel.com/
 # TODO
 - clean code
 - separate switch and potentiometers from sliders
+
+# TODO SAMPLEPLAYER
+- add input audio recording
+- add all playclip settings
+- add waveform UI
+- add filter, envelope and effects
+- settings menu per sample (volume, ...)

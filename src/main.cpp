@@ -1,35 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <MIDI.h>
-#include <SPI.h>
-#include <SD.h>
-#include <SerialFlash.h>
-#include <Audio.h>
-#include "custom-objects/CustomAudioObjects.h"
 #include <mtof.h>
 #include <math.h>
-
-// GUItool: begin automatically generated code
-AudioPlayClip            playclip1;      //xy=308,171
-AudioAmplifier           amp1;           //xy=526,155
-AudioControlSGTL5000     sgtl5000_1;
-AudioOutputI2S           i2s1;           //xy=686,170
-AudioInputI2S            i2s2;           //xy=361,355
-AudioOutputPT8211_2      pt8211_2_1;     //xy=703,281
-AudioConnection          patchCord1(playclip1, amp1);
-AudioConnection          patchCord2(amp1, 0, i2s1, 0);
-AudioConnection          patchCord3(amp1, 0, i2s1, 1);
-// AudioConnection          patchCord5(waveform1, 0, pt8211_2_1, 0);
-// AudioConnection          patchCord6(waveform1, 0, pt8211_2_1, 1);
-AudioConnection          inputPatchchCord1(i2s2, 0, pt8211_2_1, 0);
-AudioConnection          inputPatchchCord2(i2s2, 1, pt8211_2_1, 1);
-
-
-// Charge wav to array block
-AudioRecordClip          recordclip;
-AudioPlaySdWav           inputwav;
-AudioConnection          inputWavCon1(inputwav, recordclip);
-// GUItool: end automatically generated code
 
 #include <NervousSuperMother.h>
 
@@ -38,88 +11,14 @@ NervousSuperMother * device = NervousSuperMother::getInstance();
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
-void onMuxControl(byte inputIndex, unsigned int value, int diffToPrevious) {
-  String line = "";
-  switch(inputIndex){
-    case SLIDE1:
-    line = "setStartPoint";
-    value = float(value/127);
-    playclip1.setStartPoint(value);
-    break;
-    case SLIDE2:
-    line = "setEndPoint";
-    value = float(value/127);
-    playclip1.setEndPoint(value);
-    break;
-    case SLIDE3:
-    line = "setSpeed";
-    value = float(value/127);
-    playclip1.setSpeed(value);
-    break;
-    case SLIDE4:
-    line = "SLIDE4";
-    break;
-    case SLIDE5:
-    line = "SLIDE5";
-    break;
-    case SLIDE6:
-    line = "SLIDE6";
-    break;
-    case SLIDE7:
-    line = "SLIDE7";
-    break;
-    case SLIDE8:
-    line = "SLIDE8";
-    break;
-    case SLIDE9:
-    line = "SLIDE9";
-    break;
-    case SLIDE10:
-    line = "SLIDE10";
-    break;
+#include "SamplePlayer.h"
 
-    // Potentiometers
-    case POT1:
-    line = "POT1";
-    break;
-    case POT2:
-    line = "POT2";
-    break;
-    case POT3:
-    line = "POT3";
-    break;
-    case POT4:
-    line = "POT4";
-    break;
-    case POT5:
-    line = "POT5";
-    break;
-  }
-  Serial.print(line + " ");
-  Serial.print(inputIndex);
-  Serial.print(" : ");
-  Serial.print(value);
-  Serial.print(" previous was ");
-  Serial.println(diffToPrevious);
-  line = line + " : " + String(value);
-  device->updateLine(1, line);
-}
 
 void onSwitchControl(byte inputIndex, bool value) {
   Serial.print("SwitchControl :  ");
   Serial.print(inputIndex);
   Serial.print(" : ");
   Serial.print(value);
-  String line = "SwitchControl " + String(inputIndex) + " : " + String(value);
-  device->updateLine(1, line);
-}
-
-void onTrigger(byte inputIndex) {
-  Serial.print("Trigger ! : ");
-  Serial.println(inputIndex);
-  String line = "Trigger ! : " + String(inputIndex);
-  device->updateLine(1, line);
-  playclip1.play();
 }
 
 float pitch_offset = 1;
@@ -134,67 +33,19 @@ void onCV(byte inputIndex, unsigned int value, int diffToPrevious) {
   float freq = mtof.toFrequency(pitch);
   Serial.print("CV : ");
   Serial.println(inputIndex);
-  String line = "CV " + String(inputIndex) + " : " + String(value)+ " : " + String(pitch);
-  device->updateLine(1, line);
-  String line2 = "freq->" + String(freq) + " M" + String(mapping_upper_limit);
-  device->updateLine(2, line2);
-}
+  switch(inputIndex){
+    case 0:
+    playclip1.setStartPoint(float(value)/float(1000));
+    break;
 
-void onButtonPress(byte inputIndex) {
-  Serial.print("Button short press ");
-  Serial.println(inputIndex);
-  String line = "Button short press " + String(inputIndex);
-  device->updateLine(1, line);
+    case 1:
+    playclip1.setEndPoint(float(value)/float(1000));
+    break;
 
-  recordclip.startRecording();
-  inputwav.play("test.wav");
-
-  int i = 0;
-  while(inputwav.isPlaying()){
-    // Starting animation
-    lcd.setCursor(0,0);
-    lcd.print("!  Loading sample  !");
-    draw_progressbar(i);
-    delay(2);
-    i++;
+    case 2:
+    playclip1.setSpeed(float(value)/float(300));
+    break;
   }
-  recordclip.stopRecording();
-  playclip1.setClip(recordclip.getClip(), recordclip.getClipLength());
-}
-
-void onButtonLongPress(byte inputIndex) {
-  Serial.print("Button long press ");
-  Serial.println(inputIndex);
-  String line = "Button long press " + String(inputIndex);
-  device->updateLine(1, line);
-}
-
-void onButtonDoublePress(byte inputIndex) {
-  Serial.print("Button double press ");
-  Serial.println(inputIndex);
-  String line = "Button double press " + String(inputIndex);
-  device->updateLine(1, line);
-}
-
-void onEncoder(byte inputIndex, long value) {
-  Serial.print("Encoder ");
-  Serial.print(inputIndex);
-  Serial.print(" : ");
-  Serial.println(value);
-  String line = "Encoder " + String(inputIndex) + " : " + String(value);
-  device->updateLine(2, line);
-}
-
-void OnNoteOff(byte channel, byte note, byte velocity) {
-  String line = "MIDI " + String(channel) + " : " + String(note);
-  Serial.println(line);
-  device->updateLine(2, line);
-}
-
-void OnNoteOn(byte channel, byte note, byte velocity) {
-  String line = "MIDI " + String(channel) + " : " + String(note);
-  Serial.println(line);
-  device->updateLine(2, line);
 }
 
 void onVolChange(float value) {
@@ -202,7 +53,7 @@ void onVolChange(float value) {
   Serial.println(line);
   // device->updateLine(2, line);
   // AudioNoInterrupts();
-  amp1.gain(value/1000.0);
+  audio_amp[sample_number].gain(value/1000.0);
   // sgtl5000_1.lineOutLevel(value/1000.0);
   // AudioInterrupts();
   // draw_progressbar(value/10);
@@ -211,13 +62,12 @@ void onVolChange(float value) {
 void setup() {
   Serial.begin(9600);
 
-  // Set TX of Serial1 to 53 instead of 1 as encoder 1 uses that pin.
-  Serial1.setTX(53);
-
   while (!Serial && millis() < 2500); // wait for serial monitor
 
   // Starting sequence
   Serial.println("Ready!");
+
+  init_sd_card();
 
   // Configure the ADCs
   analogReadResolution(10);
@@ -240,8 +90,6 @@ void setup() {
   sgtl5000_1.surroundSoundEnable();
   sgtl5000_1.enhanceBassEnable();
 
-  amp1.gain(0.5);
-
   AudioInterrupts();
 
   // Init device NervousSuperMother
@@ -249,21 +97,6 @@ void setup() {
   device->init(controls);
 
   // Set the handlers
-  for (int i=0;i<1;i++){
-    device->setHandleMuxControlChange(i, onMuxControl);
-  }
-  device->setHandlePress(0, onButtonPress);
-  device->setHandleLongPress(0, onButtonLongPress);
-  device->setHandleDoublePress(0, onButtonDoublePress);
-  device->setHandlePress(1, onButtonPress);
-  device->setHandleLongPress(1, onButtonLongPress);
-  device->setHandleDoublePress(1, onButtonDoublePress);
-  device->setHandleEncoderChange(0, onEncoder);
-  device->setHandleEncoderChange(1, onEncoder);
-  device->updateEncodeursMaxValue(0, -50);
-  device->updateEncodeursMaxValue(1, 30);
-  device->setHandleTrigger(0, onTrigger);
-  device->setHandleTrigger(1, onTrigger);
   device->setHandleCVChange(0, onCV);
   device->setHandleCVChange(1, onCV);
   device->setHandleCVChange(2, onCV);
@@ -273,18 +106,25 @@ void setup() {
   }
   device->setHandleVolChange(onVolChange);
 
-  // Init MIDI and set handlers
+  // Init MIDI
   MIDI.begin(MIDI_CHANNEL_OMNI);
-  MIDI.setHandleNoteOff(OnNoteOff);
-  MIDI.setHandleNoteOn(OnNoteOn);
 
   // Starting animation
-  lcd.setCursor(0,0);
-  lcd.print("!    SuperSynth    !");
-  for(int i=0; i<100; i++){
-    draw_progressbar(i);
-    delay(2);
+  String starting_message = "! NervouSuperSynth !";
+  for(int i=0; i<20; i++){
+    lcd.setCursor(i,0);
+    lcd.print(starting_message[i]);
+    lcd.setCursor(i,1);
+    lcd.print("=");
+    if(i<19){
+      lcd.setCursor(i+1,1);
+      lcd.print(">");
+    }
+    delay(25);
   }
+  delay(100);
+
+  setupSampleplayer();
 
 }
 

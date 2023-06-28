@@ -62,9 +62,6 @@ void onVolChange(float value) {
 void setup() {
   Serial.begin(9600);
 
-  // Set TX of Serial1 to 53 instead of 1 as encoder 1 uses that pin.
-  // Serial1.setTX(53);
-
   while (!Serial && millis() < 2500); // wait for serial monitor
 
   // Starting sequence
@@ -110,7 +107,7 @@ void setup() {
   device->setHandleVolChange(onVolChange);
 
   // Init MIDI
-  MIDI.begin(MIDI_CHANNEL_OMNI);
+  MIDI.begin(16);
 
   // Starting animation
   String starting_message = "! NervouSuperSynth !";

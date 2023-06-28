@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include "SamplePlayerAudioConnections.h"
 #include "main_utils.h"
+#include <NervousSuperMother.h>
 
 File root;
 const char* sampleplayerBaseDir = "/SAMPLES/";
@@ -51,16 +52,13 @@ String splitString(String data, char separator, int index)
 void load_sd_sample(){
   // Retry 3 times to load sample
   for(int j = 0; j<10; j++){
-    int i = 0;
     recordclip.startRecording();
     inputwav.play(editableBank[sample_number]);
     device->updateLine(2, "!  Loading sample  !");
     delay(0.5);
     while(inputwav.isPlaying()){
       // Starting animation
-      draw_progressbar(i);
-      delay(0.1);
-      i++;
+      draw_starting_animation("", 0.1);
     }
     recordclip.stopRecording();
     if (recordclip.getClip() == NULL || recordclip.getClipLength() < 10){
@@ -117,6 +115,7 @@ void encoderHandler0(byte inputIndex, long value){
 }
 
 void simplePressHandler0(byte inputIndex){
+  device->updateLine(1, "Switch enc " + String(inputIndex));
   switch(sampleplayerStateEnc0){
     case 0:
     sample_number = enc0_value;
@@ -290,7 +289,7 @@ void initSpHandlers(){
   device->setHandlePress(0, simplePressHandler0);
   device->setHandleDoublePress(0, doublePressHandler0);
   device->setHandleEncoderChange(0, encoderHandler0);
-  device->setHandlePress(1, simplePressHandler1);
+  device->setHandlePress(1, simplePressHandler0);
   device->setHandleDoublePress(1, doublePressHandler1);
   device->setHandleEncoderChange(1, encoderHandler1);
   device->setHandleMuxControlChange(SLIDE1, setStart1);

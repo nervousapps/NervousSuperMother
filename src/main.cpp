@@ -62,6 +62,9 @@ void onVolChange(float value) {
 void setup() {
   Serial.begin(9600);
 
+  // Set TX of Serial1 to 53 instead of 1 as encoder 1 uses that pin.
+  // Serial1.setTX(53);
+
   while (!Serial && millis() < 2500); // wait for serial monitor
 
   // Starting sequence
@@ -111,18 +114,8 @@ void setup() {
 
   // Starting animation
   String starting_message = "! NervouSuperSynth !";
-  for(int i=0; i<20; i++){
-    lcd.setCursor(i,0);
-    lcd.print(starting_message[i]);
-    lcd.setCursor(i,1);
-    lcd.print("=");
-    if(i<19){
-      lcd.setCursor(i+1,1);
-      lcd.print(">");
-    }
-    delay(25);
-  }
-  delay(100);
+  draw_starting_animation(starting_message, 25);
+  delay(1000);
 
   setupSampleplayer();
 

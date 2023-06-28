@@ -41,13 +41,13 @@ const int MUX_CONTROL[MnumControls] = {
 };
 
 // ******BUTTONS CONSTANT VALUES********
-const int BUTTON_PINS = 1; // number of Digital trigger PINS
+const int BUTTON_PINS = 2; // number of Digital trigger PINS
 const int BOUNCE_TIME = 5; // 5 ms is usually sufficient
 const boolean toggled = true;
 
 // define the pins and notes for digital events
 const int BUTTONS[BUTTON_PINS] = {
-  // ENC1_SW,
+  ENC1_SW,
   ENC2_SW
 };
 
@@ -95,7 +95,7 @@ ResponsiveAnalogRead cv_controls[]{
 // initialize the bounce objects
 Bounce digital_button[] =   {
   Bounce(BUTTONS[0],BOUNCE_TIME),
-  // Bounce(BUTTONS[1],BOUNCE_TIME)
+  Bounce(BUTTONS[1],BOUNCE_TIME)
 };
 
 Bounce digital_trigger[] =   {
@@ -103,9 +103,9 @@ Bounce digital_trigger[] =   {
   Bounce(TRIGGERS[1],BOUNCE_TIME)
 };
 
-const int NB_ENCODER = 1;
+const int NB_ENCODER = 2;
 Encoder encoders_knob[] = {
-  // Encoder(ENC1_1, ENC1_2),
+  Encoder(ENC1_1, ENC1_2),
   Encoder(ENC2_1, ENC2_2)
 };
 

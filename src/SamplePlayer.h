@@ -101,7 +101,6 @@ void setEnd1(byte inputIndex, unsigned int value, int diffToPrevious){
 }
 
 void encoderHandler0(byte inputIndex, long value){
-  Serial.println("Encoder 0");
   switch(sampleplayerStateEnc0){
     case 0:
     enc0_value = value;
@@ -136,14 +135,13 @@ void doublePressHandler0(byte inputIndex){
   switch(sampleplayerStateEnc0){
     case 1:
     sampleplayerStateEnc0 = 0;
-    // device->updateEncodeursMaxValue(0, sizeof(audio_playclip));// + sizeof(audio_playwav));
-    // device->updateEncodeursValue(0, 0);
+    device->updateEncodeursMaxValue(0, sizeof(audio_playclip));// + sizeof(audio_playwav));
+    device->updateEncodeursValue(0, 0);
     break;
   }
 }
 
 void encoderHandler1(byte inputIndex, long value){
-  Serial.println("Encoder 1");
   switch(sampleplayerStateEnc1){
     case 1:
     Serial.print(value);
@@ -179,6 +177,7 @@ void longPressHandler(byte inputIndex){
 }
 
 void simplePressHandler1(byte inputIndex){
+  Serial.println("Switch Encoder 1");
   switch(sampleplayerStateEnc1){
     case 1:
     device->updateEncodeursMaxValue(1, directoriesList[numDirectory].numberFile-1);
@@ -300,8 +299,8 @@ void initSpHandlers(){
 
   device->updateEncodeursMaxValue(0, sizeof(audio_playclip));// + sizeof(audio_playwav));
   device->updateEncodeursValue(0, 0);
-  device->updateEncodeursMaxValue(1, directoriesList[numDirectory].numberFile-1);
-  device->updateEncodeursValue(1, numFile);
+  device->updateEncodeursMaxValue(1, numDirectorymax-1);
+  device->updateEncodeursValue(1, numDirectory);
 
   // device->setHandleSwitchChange(0, activeHP);
 

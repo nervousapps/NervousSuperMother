@@ -227,4 +227,18 @@ void draw_progressbar(byte percent) {
   }
 }
 
+void draw_starting_animation(String starting_message, int dly){
+  for(int i=0; i<20; i++){
+    lcd.setCursor(i,0);
+    lcd.print(starting_message[i]);
+    lcd.setCursor(i,1);
+    lcd.print("=");
+    if(i<19){
+      lcd.setCursor(i+1,1);
+      lcd.print(">");
+    }
+    delay(dly);
+  }
+}
+
 #endif

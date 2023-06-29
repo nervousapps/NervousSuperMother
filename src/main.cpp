@@ -33,19 +33,19 @@ void onCV(byte inputIndex, unsigned int value, int diffToPrevious) {
   float freq = mtof.toFrequency(pitch);
   Serial.print("CV : ");
   Serial.println(inputIndex);
-  switch(inputIndex){
-    case 0:
-    playclip1.setStartPoint(float(value)/float(1000));
-    break;
+  // switch(inputIndex){
+  //   case 0:
+  //   playclip1.setStartPoint(float(value)/float(1000));
+  //   break;
 
-    case 1:
-    playclip1.setEndPoint(float(value)/float(1000));
-    break;
+  //   case 1:
+  //   playclip1.setEndPoint(float(value)/float(1000));
+  //   break;
 
-    case 2:
-    playclip1.setSpeed(float(value)/float(300));
-    break;
-  }
+  //   case 2:
+  //   playclip1.setSpeed(float(value)/float(300));
+  //   break;
+  // }
 }
 
 void onVolChange(float value) {
@@ -57,6 +57,27 @@ void onVolChange(float value) {
   // sgtl5000_1.lineOutLevel(value/1000.0);
   // AudioInterrupts();
   // draw_progressbar(value/10);
+}
+
+void onButtonPress(byte inputIndex) {
+  Serial.print("Button short press ");
+  Serial.println(inputIndex);
+  String line = "Button short press " + String(inputIndex);
+  device->updateLine(1, line);
+}
+
+void onButtonLongPress(byte inputIndex) {
+  Serial.print("Button long press ");
+  Serial.println(inputIndex);
+  String line = "Button long press " + String(inputIndex);
+  device->updateLine(1, line);
+}
+
+void onButtonDoublePress(byte inputIndex) {
+  Serial.print("Button double press ");
+  Serial.println(inputIndex);
+  String line = "Button double press " + String(inputIndex);
+  device->updateLine(1, line);
 }
 
 void setup() {
@@ -96,7 +117,7 @@ void setup() {
   byte controls[7] = {0,1,2,3,4,5,6};
   device->init(controls);
 
-  // Set the handlers
+  // Set device handlers
   device->setHandleCVChange(0, onCV);
   device->setHandleCVChange(1, onCV);
   device->setHandleCVChange(2, onCV);
@@ -121,4 +142,4 @@ void setup() {
 void loop() {
   MIDI.read();
   device->update();
-}
+} 

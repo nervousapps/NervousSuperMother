@@ -16,7 +16,7 @@ int sampleplayerStateEnc0 = 0;
 int sampleplayerStateEnc1 = 1;
 int sample_number = 0;
 int enc0_value = 0;
-const String sampleEditorMenu[1] = {"Volume"};
+const String sampleEditorMenu[2] = {"Volume", "Nothing here..."};
 
 int numFile = 0;
 struct Directories{
@@ -49,24 +49,30 @@ String splitString(String data, char separator, int index)
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-void load_sd_sample(){
+void load_sd_sample(int clipIndex){
   // Retry 3 times to load sample
   for(int j = 0; j<10; j++){
     recordclip.startRecording();
     inputwav.play(editableBank[sample_number]);
-    device->updateLine(2, "!  Loading sample  !");
+    device->updateLine(1, "!  Loading sample  !");
     delay(0.5);
     while(inputwav.isPlaying()){
       // Starting animation
-      draw_starting_animation("", 0.1);
+      draw_starting_animation("!  Loading sample  !", 0.5);
     }
     recordclip.stopRecording();
     if (recordclip.getClip() == NULL || recordclip.getClipLength() < 10){
-      device->updateLine(2, "!Fail to load sample!");
+      device->updateLine(1, "!Fail to load sample!");
     }else{
-      playclip1.noteOff();
-      playclip1.setClip(recordclip.getClip(), recordclip.getClipLength());
-      device->updateLine(2, "!  Sample loaded  !");
+      if(clipIndex == 0){
+        playclip1.noteOff();
+        playclip1.setClip(recordclip.getClip(), recordclip.getClipLength());
+      }
+      if(clipIndex == 1){
+        playclip2.noteOff();
+        playclip2.setClip(recordclip.getClip(), recordclip.getClipLength());
+      }
+      device->updateLine(1, "!  Sample loaded  !");
       delay(0.5);
       break;
     }
@@ -75,7 +81,15 @@ void load_sd_sample(){
 
 void sampleplay(byte inputIndex){
   if(editableBank[inputIndex] != NULL){
-    audio_playclip[inputIndex].play();
+    switch(inputIndex){
+      case 0:
+      playclip1.play();
+      break;
+
+      case 1:
+      playclip2.play();
+      break;
+    }
     device->updateLine(2, "PLAYING SAMPLE " + String(inputIndex));
   }
 }
@@ -103,7 +117,7 @@ void encoderHandler0(byte inputIndex, long value){
     case 0:
     enc0_value = value;
     lcd.setCursor(0, 0);
-    lcd.print("                   " + String(sample_number+1));
+    lcd.print("                   " + String(enc0_value+1));
     break;
 
     case 1:
@@ -119,7 +133,7 @@ void simplePressHandler0(byte inputIndex){
   switch(sampleplayerStateEnc0){
     case 0:
     sample_number = enc0_value;
-    device->updateEncodeursMaxValue(0, sizeof(sampleEditorMenu));
+    device->updateEncodeursMaxValue(0, 1000);
     device->updateEncodeursValue(0, 0);
     sampleplayerStateEnc0 = 1;
     break;
@@ -134,7 +148,7 @@ void doublePressHandler0(byte inputIndex){
   switch(sampleplayerStateEnc0){
     case 1:
     sampleplayerStateEnc0 = 0;
-    device->updateEncodeursMaxValue(0, sizeof(audio_playclip));// + sizeof(audio_playwav));
+    device->updateEncodeursMaxValue(0, 1);
     device->updateEncodeursValue(0, 0);
     break;
   }
@@ -190,7 +204,7 @@ void simplePressHandler1(byte inputIndex){
     strcat(editableBank[sample_number], directoriesList[numDirectory].directory.c_str());
     strcat(editableBank[sample_number], "/");
     strcat(editableBank[sample_number], directoriesList[numDirectory].files[numFile].c_str());
-    load_sd_sample();
+    load_sd_sample(sample_number);
   }
 }
 
@@ -244,7 +258,7 @@ void initSpAudioObjects(){
     samplemixPTR.gain(i, 0.25);
   }
 
-  for(int i = 0; i<sizeof(audio_amp); i++){
+  for(int i = 0; i<8; i++){
     audio_amp[i].gain(0.5);
   }
 }
@@ -288,18 +302,20 @@ void initSpHandlers(){
 
   device->setHandlePress(0, simplePressHandler0);
   device->setHandleDoublePress(0, doublePressHandler0);
-  device->setHandleEncoderChange(0, encoderHandler0);
-  device->setHandlePress(1, simplePressHandler0);
+  device->setHandlePress(1, simplePressHandler1);
   device->setHandleDoublePress(1, doublePressHandler1);
+  
+  device->setHandleEncoderChange(0, encoderHandler0);
   device->setHandleEncoderChange(1, encoderHandler1);
-  device->setHandleMuxControlChange(SLIDE1, setStart1);
-  device->setHandleMuxControlChange(SLIDE2, setEnd1);
-  device->setHandleMuxControlChange(SLIDE3, setSpeed1);
 
-  device->updateEncodeursMaxValue(0, sizeof(audio_playclip));// + sizeof(audio_playwav));
+  device->updateEncodeursMaxValue(0, 1);
   device->updateEncodeursValue(0, 0);
   device->updateEncodeursMaxValue(1, numDirectorymax-1);
   device->updateEncodeursValue(1, numDirectory);
+
+  device->setHandleMuxControlChange(SLIDE1, setStart1);
+  device->setHandleMuxControlChange(SLIDE2, setEnd1);
+  device->setHandleMuxControlChange(SLIDE3, setSpeed1);
 
   // device->setHandleSwitchChange(0, activeHP);
 

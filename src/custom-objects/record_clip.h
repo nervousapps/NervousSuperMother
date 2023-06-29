@@ -27,7 +27,7 @@ SOFTWARE.*/
 
 // Record an audio clip into to EXTMEM
 
-#define AUDIO_RECORD_CLIP_MAX_LENGTH 1500 // about 6 seconds of audio
+#define AUDIO_RECORD_CLIP_MAX_LENGTH 1800 // about 6 seconds of audio
 
 class AudioRecordClip : public AudioStream
 {

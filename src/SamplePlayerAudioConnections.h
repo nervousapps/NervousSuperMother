@@ -6,7 +6,7 @@
 
 
 AudioPlayClip            playclip1;
-// AudioPlayClip            playclip2;
+AudioPlayClip            playclip2;
 // AudioPlaySdWav           playwav1;
 // AudioPlaySdWav           playwav2;
 // AudioPlaySdWav           playwav3;
@@ -40,7 +40,7 @@ AudioRecordClip          recordclip;
 AudioPlaySdWav           inputwav;
 
 AudioConnection          samplepatchCord0(playclip1, sampleamp1);
-// AudioConnection          samplepatchCord1(playclip2, sampleamp2);
+AudioConnection          samplepatchCord1(playclip2, sampleamp2);
 // AudioConnection          samplepatchCord2(playwav1, sampleamp3);
 // AudioConnection          samplepatchCord3(playwav2, sampleamp4);
 // AudioConnection          samplepatchCord4(playwav3, sampleamp5);
@@ -84,11 +84,6 @@ AudioConnection          inputpatchCord0(inputwav, recordclip);
 //     playwav5,
 //     playwav6
 // };
-
-AudioPlayClip audio_playclip[1] = {
-    playclip1
-    // playclip2
-};
 
 AudioAmplifier audio_amp[8] = {
     sampleamp1,

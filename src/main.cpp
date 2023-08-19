@@ -7,19 +7,14 @@
 #include <NervousSuperMother.h>
 
 // Motherboard
+#ifndef DEVICE
+#define DEVICE
 NervousSuperMother * device = NervousSuperMother::getInstance();
+#endif
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 #include "SamplePlayer.h"
-
-
-void onSwitchControl(byte inputIndex, bool value) {
-  Serial.print("SwitchControl :  ");
-  Serial.print(inputIndex);
-  Serial.print(" : ");
-  Serial.print(value);
-}
 
 float pitch_offset = 1;
 float max_voltage_of_adc = 3.3;
@@ -29,34 +24,37 @@ float volts_per_octave = 1;
 float mapping_upper_limit = (max_voltage_of_adc / voltage_division_ratio) * notes_per_octave * volts_per_octave;
 
 void onCV(byte inputIndex, unsigned int value, int diffToPrevious) {
-  float pitch = pitch_offset + map(value,1024,0, 0.0, mapping_upper_limit);
-  float freq = mtof.toFrequency(pitch);
+  // float pitch = pitch_offset + map(value,1024,0, 0.0, mapping_upper_limit);
+  // float freq = mtof.toFrequency(pitch);
   Serial.print("CV : ");
   Serial.println(inputIndex);
-  // switch(inputIndex){
-  //   case 0:
-  //   playclip1.setStartPoint(float(value)/float(1000));
-  //   break;
+  switch(inputIndex){
+    case 0:
+    playclip1.setStartPoint(map(value,1024,0, 0.0, 1.0));
+    break;
 
-  //   case 1:
-  //   playclip1.setEndPoint(float(value)/float(1000));
-  //   break;
+    case 1:
+    playclip1.setEndPoint(map(value,1024,0, 0.0, 1.0));
+    break;
 
-  //   case 2:
-  //   playclip1.setSpeed(float(value)/float(300));
-  //   break;
-  // }
+    case 2:
+    playclip1.setSpeed(map(value,1024,0, 0.0, 5.0));
+    break;
+  }
 }
 
 void onVolChange(float value) {
   String line = "VOL : " + String(value);
   Serial.println(line);
-  // device->updateLine(2, line);
-  // AudioNoInterrupts();
-  audio_amp[sample_number].gain(value/1000.0);
-  // sgtl5000_1.lineOutLevel(value/1000.0);
-  // AudioInterrupts();
-  // draw_progressbar(value/10);
+  device->updateLine(1, line);
+  AudioNoInterrupts();
+  main_amplifier_L.gain(value/400.0);
+  main_amplifier_R.gain(value/400.0);
+  main_amplifier_PL.gain(value/400.0);
+  main_amplifier_PR.gain(value/400.0);
+  AudioInterrupts();
+  draw_progressbar(map(value, 0, 1024, 0, 100));
+  device->refreshDisplay(true);
 }
 
 void onButtonPress(byte inputIndex) {
@@ -96,7 +94,7 @@ void setup() {
   // analogReference(EXTERNAL);
 
   // Init audio
-  AudioMemory(100);
+  AudioMemory(500);
 
   AudioNoInterrupts();
 
@@ -122,18 +120,18 @@ void setup() {
   device->setHandleCVChange(1, onCV);
   device->setHandleCVChange(2, onCV);
   device->setHandleCVChange(3, onCV);
-  for (int i=0;i<ANALOG_CONTROL_PINS;i++){
-    device->setHandleSwitchChange(i, onSwitchControl);
-  }
   device->setHandleVolChange(onVolChange);
 
   // Init MIDI
   MIDI.begin(16);
 
   // Starting animation
-  String starting_message = "! NervouSuperSynth !";
-  draw_starting_animation(starting_message, 25);
-  delay(1000);
+  lcd.setCursor(0,0);
+  lcd.print("! NervouSuperSynth !");
+  for(int i=0; i<100; i++){
+    draw_progressbar(i);
+    delay(2);
+  }
 
   setupSampleplayer();
 

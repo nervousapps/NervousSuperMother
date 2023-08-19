@@ -43,6 +43,10 @@ It is mainly a development platform using almost all ports of Teensy.
 - RESET
 - PROGRAM
 
+# PSRAM
+
+The two PSRAM slots must be filled with a psram chip and the test here https://github.com/PaulStoffregen/teensy41_psram_memtest/blob/master/teensy41_psram_memtest.ino must succeed.
+
 # Driver
 https://github.com/nervousapps/NervousSuperMother/tree/withdaddy
 

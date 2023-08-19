@@ -6,6 +6,12 @@
 #include "SamplePlayerAudioConnections.h"
 #include "main_utils.h"
 #include <NervousSuperMother.h>
+#include "display_utils.h"
+
+#ifndef DEVICE
+#define DEVICE
+NervousSuperMother * device = NervousSuperMother::getInstance();
+#endif
 
 File root;
 const char* sampleplayerBaseDir = "/SAMPLES/";
@@ -14,24 +20,23 @@ volatile boolean directory = true;
 volatile boolean sample = false;
 int sampleplayerStateEnc0 = 0;
 int sampleplayerStateEnc1 = 1;
-int sample_number = 0;
-int enc0_value = 0;
+long sample_number = 0;
+long enc0_value = 0;
+bool inverted = false;
 const String sampleEditorMenu[2] = {"Volume", "Nothing here..."};
 
 int numFile = 0;
 struct Directories{
-  const String directory;
-  const String files[150];
+  String directory;
+  String files[150];
   int numberFile;
 };
 
-char editableBank[2][100] = {NULL};
+char editableBank[NB_PLAYERS][100] = {};
 
 int numDirectory = 0;
 int numDirectorymax = 0;
-Directories directoriesList[20];
-
-volatile boolean sampleVolCtrl = false;
+EXTMEM Directories directoriesList[20];
 
 String splitString(String data, char separator, int index)
 {
@@ -49,51 +54,68 @@ String splitString(String data, char separator, int index)
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-void load_sd_sample(int clipIndex){
-  // Retry 3 times to load sample
+void load_sd_sample(long clipIndex){
+  // Retry 10 times to load sample
   for(int j = 0; j<10; j++){
-    recordclip.startRecording();
-    inputwav.play(editableBank[sample_number]);
-    device->updateLine(1, "!  Loading sample  !");
-    delay(0.5);
-    while(inputwav.isPlaying()){
+    recordclips[clipIndex].startRecording();
+    inputwavs[clipIndex].play(editableBank[clipIndex]);
+    while(inputwavs[clipIndex].isPlaying()){
       // Starting animation
       draw_starting_animation("!  Loading sample  !", 0.5);
     }
-    recordclip.stopRecording();
-    if (recordclip.getClip() == NULL || recordclip.getClipLength() < 10){
-      device->updateLine(1, "!Fail to load sample!");
+    recordclips[clipIndex].stopRecording();
+    if (recordclips[clipIndex].getClip() == NULL || recordclips[clipIndex].getClipLength() < 10){
+      lcd.setCursor(0,0);
+      lcd.print("!Fail to load sample!");
     }else{
-      if(clipIndex == 0){
+      switch(clipIndex){
+        case 0:
         playclip1.noteOff();
-        playclip1.setClip(recordclip.getClip(), recordclip.getClipLength());
-      }
-      if(clipIndex == 1){
+        playclip1.setClip(recordclips[clipIndex].getClip(), recordclips[clipIndex].getClipLength());
+        break;
+
+        case 1:
         playclip2.noteOff();
-        playclip2.setClip(recordclip.getClip(), recordclip.getClipLength());
+        playclip2.setClip(recordclips[clipIndex].getClip(), recordclips[clipIndex].getClipLength());
+        break;
+
+        case 2:
+        playclip3.noteOff();
+        playclip3.setClip(recordclips[clipIndex].getClip(), recordclips[clipIndex].getClipLength());
+        break;
+
+        case 3:
+        playclip4.noteOff();
+        playclip4.setClip(recordclips[clipIndex].getClip(), recordclips[clipIndex].getClipLength());
+        break;
       }
-      device->updateLine(1, "!  Sample loaded  !");
+      lcd.setCursor(0,0);
+      lcd.print("!  Sample loaded  !");
       delay(0.5);
       break;
     }
   }
+  device->refreshDisplay(true);
 }
 
 void sampleplay(byte inputIndex){
-  if(editableBank[inputIndex] != NULL){
-    switch(inputIndex){
-      case 0:
-      playclip1.play();
-      break;
-
-      case 1:
-      playclip2.play();
-      break;
-    }
-    device->updateLine(2, "PLAYING SAMPLE " + String(inputIndex));
+  if(inputIndex == 0){
+    playclip1.play();
+    lcd.setCursor(18, 1);
+    lcd.print("!");
+  }else{
+    playsdwavs[0].play(editableBank[4]);
+    lcd.setCursor(19, 1);
+    lcd.print("!");
   }
 }
 
+void sampleclear(byte inputIndex){
+  lcd.setCursor(18+int(inputIndex), 1);
+  lcd.print(" ");
+}
+
+/** Sliders handlers */
 void setSpeed1(byte inputIndex, unsigned int value, int diffToPrevious){
   float valflo = float(value)/float(32);
   playclip1.setSpeed(valflo);
@@ -112,34 +134,78 @@ void setEnd1(byte inputIndex, unsigned int value, int diffToPrevious){
   device->updateLine(2, "END 1 : " + String(valflo));
 }
 
+void setLoopStartPoint1(byte inputIndex, unsigned int value, int diffToPrevious){
+  float valflo = float(value)/float(127);
+  playclip1.setLoopStartPoint(valflo);
+  device->updateLine(2, "LOOP START 1 : " + String(valflo));
+}
+
+void setLoopEndPoint1(byte inputIndex, unsigned int value, int diffToPrevious){
+  float valflo = float(value)/float(127);
+  playclip1.setLoopEndPoint(valflo);
+  device->updateLine(2, "LOOP END 1 : " + String(valflo));
+}
+
+void setLoopCrossfade1(byte inputIndex, unsigned int value, int diffToPrevious){
+  float valflo = float(value)/float(127);
+  playclip1.setLoopCrossFade(valflo);
+  device->updateLine(2, "LOOP CROSS 1 : " + String(valflo));
+}
+
+void setLoop1(byte inputIndex, bool value) {
+  playclip1.loop(value);
+  device->updateLine(2, "LOOP ENABLED 1 : " + String(value));
+}
+
+/** Potentiometers handlers */
+void setVolSample1(byte inputIndex, unsigned int value, int diffToPrevious){
+  amplifiers[0].gain(value);
+  device->updateLine(2, "VOL sample 1 : " + String(value));
+}
+
+void setVolSample2(byte inputIndex, unsigned int value, int diffToPrevious){
+  amplifiers[1].gain(value);
+  device->updateLine(2, "VOL sample 2 : " + String(value));
+} 
+
+void setVolSample5(byte inputIndex, unsigned int value, int diffToPrevious){
+  amplifiers[4].gain(value);
+  device->updateLine(2, "VOL sample 5 : " + String(value));
+} 
+
+void setVolSample6(byte inputIndex, unsigned int value, int diffToPrevious){
+  amplifiers[5].gain(value);
+  device->updateLine(2, "VOL sample 6 : " + String(value));
+} 
+
+/** Encoder 0 handlers */
 void encoderHandler0(byte inputIndex, long value){
   switch(sampleplayerStateEnc0){
     case 0:
+    Serial.print("In encoder handler : ");
+    Serial.println(value);
     enc0_value = value;
-    lcd.setCursor(0, 0);
-    lcd.print("                   " + String(enc0_value+1));
+    inverted = false;
+    Serial.print("In encoder handler : ");
+    Serial.println(enc0_value);
+    write_special_char(enc0_value, inverted);
     break;
 
     case 1:
-    audio_amp[sample_number].gain(value);
-    lcd.setCursor(0, 0);
-    lcd.print("Volume " + String(sample_number) + " : " + String(value));
+    // Do nothing, sample number locked
     break;
   }
 }
 
 void simplePressHandler0(byte inputIndex){
-  device->updateLine(1, "Switch enc " + String(inputIndex));
   switch(sampleplayerStateEnc0){
     case 0:
     sample_number = enc0_value;
-    device->updateEncodeursMaxValue(0, 1000);
-    device->updateEncodeursValue(0, 0);
+    inverted = true;
+    Serial.print("In simple press handler : ");
+    Serial.println(sample_number);
+    write_special_char(sample_number, inverted);
     sampleplayerStateEnc0 = 1;
-    break;
-
-    case 1:
-    
     break;
   }
 }
@@ -147,15 +213,21 @@ void simplePressHandler0(byte inputIndex){
 void doublePressHandler0(byte inputIndex){
   switch(sampleplayerStateEnc0){
     case 1:
+    device->updateEncodeursValue(0, sample_number);
+    inverted = false;
+    write_special_char(sample_number, inverted);
     sampleplayerStateEnc0 = 0;
-    device->updateEncodeursMaxValue(0, 1);
-    device->updateEncodeursValue(0, 0);
     break;
   }
 }
 
+/** Encoder 1 handlers */
 void encoderHandler1(byte inputIndex, long value){
   switch(sampleplayerStateEnc1){
+    case 0:
+    // Volume
+    break;
+    
     case 1:
     Serial.print(value);
     Serial.print(" : ");
@@ -169,7 +241,7 @@ void encoderHandler1(byte inputIndex, long value){
     Serial.print(" : ");
     Serial.println(directoriesList[numDirectory].files[numFile]);
     numFile = value;
-    device->updateLine(1, directoriesList[numDirectory].files[numFile]);
+    device->updateLine(2, directoriesList[numDirectory].files[numFile]);
     break;
   }
 }
@@ -180,6 +252,7 @@ void doublePressHandler1(byte inputIndex){
     device->updateEncodeursMaxValue(1, numDirectorymax-1);
     device->updateEncodeursValue(1, numDirectory);
     device->updateLine(1, directoriesList[numDirectory].directory);
+    device->updateLine(2, " ");
     sampleplayerStateEnc1 = 1;
     break;
   }
@@ -190,12 +263,11 @@ void longPressHandler(byte inputIndex){
 }
 
 void simplePressHandler1(byte inputIndex){
-  Serial.println("Switch Encoder 1");
   switch(sampleplayerStateEnc1){
     case 1:
     device->updateEncodeursMaxValue(1, directoriesList[numDirectory].numberFile-1);
     device->updateEncodeursValue(1, numFile);
-    device->updateLine(1, directoriesList[numDirectory].files[numFile]);
+    device->updateLine(2, directoriesList[numDirectory].files[numFile]);
     sampleplayerStateEnc1 = 2;
     break;
 
@@ -204,23 +276,56 @@ void simplePressHandler1(byte inputIndex){
     strcat(editableBank[sample_number], directoriesList[numDirectory].directory.c_str());
     strcat(editableBank[sample_number], "/");
     strcat(editableBank[sample_number], directoriesList[numDirectory].files[numFile].c_str());
-    load_sd_sample(sample_number);
+    // No need to load sample for playSDwav, only for playClip
+    if(sample_number<4){
+      load_sd_sample(sample_number);
+    }
   }
 }
 
+/** MIDI handlers */
 void OnNoteOff(byte channel, byte note, byte velocity) {
   String line = "MIDI " + String(channel) + " : " + String(note);
   Serial.println(line);
 }
 
 void OnNoteOn(byte channel, byte note, byte velocity) {
-  int sample_note = map(note, 0, 127, 0, 6);
-  // if(editableBank[sample_note] != NULL){
-  //   audio_playwav[sample_note].play(editableBank[sample_number]);
-  // }
-  device->updateLine(2, "PLAYING SAMPLE " + String(sample_number+2));
+  switch (note)
+  {
+  case 36:
+    playclip2.play();
+    break;
+
+  case 37:
+    playclip3.play();
+    break;
+  
+  case 38:
+    playclip4.play();
+    break;
+
+  case 39:
+    playsdwavs[1].play(editableBank[5]);
+    break;
+
+  case 40:
+    playsdwavs[2].play(editableBank[6]);
+    break;
+
+  case 41:
+    playsdwavs[3].play(editableBank[7]);
+    break;
+  
+  default:
+    break;
+  }
   String line = "MIDI " + String(channel) + " : " + String(note);
   Serial.println(line);
+}
+
+/** Custom display refresh */
+void customDisplayRefresh(){
+  write_special_char(enc0_value, inverted);
 }
 
 void listDirectories(File dir) {
@@ -232,7 +337,7 @@ void listDirectories(File dir) {
       break;
     }
     if (entry.isDirectory()) {
-      directoriesList[numDirectory].directory = entry.name();
+      directoriesList[numDirectory].directory = String(entry.name());
       numFile = 0;
       Serial.print(entry.name());
       Serial.println("/");
@@ -242,7 +347,7 @@ void listDirectories(File dir) {
       Serial.print("\t\t");
       Serial.println(entry.name());
       // files have sizes, directories do not
-      directoriesList[numDirectory].files[numFile] = entry.name();
+      directoriesList[numDirectory].files[numFile] = String(entry.name());
       numFile ++;
     }
     entry.close();
@@ -251,6 +356,7 @@ void listDirectories(File dir) {
 
 void initSpAudioObjects(){
   // Set mixers gain
+  AudioNoInterrupts();
   for(int i = 0; i<4; i++){
     samplemixL.gain(i, 0.25);
     samplemixR.gain(i, 0.25);
@@ -259,8 +365,9 @@ void initSpAudioObjects(){
   }
 
   for(int i = 0; i<8; i++){
-    audio_amp[i].gain(0.5);
+    amplifiers[i].gain(5);
   }
+  AudioInterrupts();
 }
 
 void initSpBanks(){
@@ -297,8 +404,10 @@ void initSpBanks(){
 // }
 
 void initSpHandlers(){
-  device->setHandleRisingTrigger(0, sampleplay);
-  device->setHandleRisingTrigger(1, sampleplay);
+  device->setHandleRisingTrigger(0, sampleclear);
+  device->setHandleRisingTrigger(1, sampleclear);
+  device->setHandleFallingTrigger(0, sampleplay);
+  device->setHandleFallingTrigger(1, sampleplay);
 
   device->setHandlePress(0, simplePressHandler0);
   device->setHandleDoublePress(0, doublePressHandler0);
@@ -308,7 +417,7 @@ void initSpHandlers(){
   device->setHandleEncoderChange(0, encoderHandler0);
   device->setHandleEncoderChange(1, encoderHandler1);
 
-  device->updateEncodeursMaxValue(0, 1);
+  device->updateEncodeursMaxValue(0, 1-NB_PLAYERS);
   device->updateEncodeursValue(0, 0);
   device->updateEncodeursMaxValue(1, numDirectorymax-1);
   device->updateEncodeursValue(1, numDirectory);
@@ -316,6 +425,19 @@ void initSpHandlers(){
   device->setHandleMuxControlChange(SLIDE1, setStart1);
   device->setHandleMuxControlChange(SLIDE2, setEnd1);
   device->setHandleMuxControlChange(SLIDE3, setSpeed1);
+  device->setHandleMuxControlChange(SLIDE4, setLoopStartPoint1);
+  device->setHandleMuxControlChange(SLIDE5, setLoopEndPoint1);
+  device->setHandleMuxControlChange(SLIDE6, setLoopCrossfade1);
+
+  device->setHandleMuxControlChange(POT1, setVolSample1);
+  device->setHandleMuxControlChange(POT2, setVolSample2);
+  device->setHandleMuxControlChange(POT3, setVolSample5);
+  device->setHandleMuxControlChange(POT4, setVolSample6);
+
+  device->setHandleSwitchChange(0, setLoop1);
+
+  device->setCustomDisplayRefresh(customDisplayRefresh);
+  device->updateLine(1, directoriesList[numDirectory].directory);
 
   // device->setHandleSwitchChange(0, activeHP);
 
@@ -327,6 +449,7 @@ void setupSampleplayer(){
   initSpBanks();
   initSpAudioObjects();
   initSpHandlers();
+  device->refreshDisplay();
 }
 
 #endif

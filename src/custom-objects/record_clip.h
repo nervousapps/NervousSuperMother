@@ -26,8 +26,8 @@ SOFTWARE.*/
 #include "AudioUtility.h"
 
 // Record an audio clip into to EXTMEM
-
-#define AUDIO_RECORD_CLIP_MAX_LENGTH 1800 // about 6 seconds of audio
+// 10000 approx 30 sec of audio
+#define AUDIO_RECORD_CLIP_MAX_LENGTH 10000 // about 30 seconds of audio
 
 class AudioRecordClip : public AudioStream
 {
@@ -35,12 +35,17 @@ public:
     AudioRecordClip() : AudioStream(1, inputQueueArray)
     {
         // allocate space in external RAM (EXTMEM)
-        clip = (audio_block_data_t*) malloc(AUDIO_RECORD_CLIP_MAX_LENGTH * sizeof(audio_block_data_t));
+        clip = (audio_block_data_t*) extmem_malloc(AUDIO_RECORD_CLIP_MAX_LENGTH * sizeof(audio_block_data_t));
         if (clip == NULL)
         {
             Serial.println("ERROR: AudioRecordClip::AudioRecordClip(), could not allocate memory for clip");
         }
     }
+
+    // void setAllocatedBuffer(audio_block_data_t *allocatedClip){
+    //     clip = allocatedClip;
+    // }
+
     virtual void update(void)
     {
         // record incoming audio data into EXTMEM
@@ -88,7 +93,6 @@ public:
         clipLength = currentBlock;
         __enable_irq();
     }
-
 
 private:
     audio_block_t *inputQueueArray[1];

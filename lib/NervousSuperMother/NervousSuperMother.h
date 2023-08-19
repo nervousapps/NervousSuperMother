@@ -6,7 +6,7 @@
 
 /*
 * NervousSuperMother(withDaddy)
-* v0.3.0 beta
+* v0.4.0 beta
 */
 class NervousSuperMother{
 
@@ -18,7 +18,7 @@ private:
 
   byte ioNumber = 7;
   byte currentInput = 0;
-  byte analogResolution = analogResolution;
+  byte analogResolution = ANALOGRESOLUTION;
 
   // Switches
   bool *switches;
@@ -72,13 +72,15 @@ private:
   using volChangeCallback = void (*)(float);
   volChangeCallback inputsvolChangeCallback;
 
+  using CustomDisplayRefresh = void (*)();
+  CustomDisplayRefresh customDisplayRefresh;
+
   void readSwitch(byte inputIndex);
   void readMux();
   void readButton(byte inputIndex);
   void readEncoder(byte inputIndex);
   void readTrigger(byte inputIndex);
   void readCV(byte inputIndex);
-  void refreshDisplay();
 
   // Main clock
   elapsedMicros clockMain;
@@ -104,6 +106,8 @@ public:
   void updateEncodeursValue(byte inputIndex, long encoderValue);
   void updateLine(byte line_nb, String line);
   void resetHandlers();
+  void updateOneChar(byte line_nb, char one_char, int index);
+  void refreshDisplay(bool force = false);
 
   // Callbacks
   void setHandlePress(byte inputIndex, PressCallback fptr);
@@ -116,6 +120,7 @@ public:
   void setHandleRisingTrigger(byte inputIndex, RisingTriggerCallback fptr);
   void setHandleCVChange(byte inputIndex, CVChangeCallback fptr);
   void setHandleVolChange(volChangeCallback fptr);
+  void setCustomDisplayRefresh(CustomDisplayRefresh fptr);
 };
 
 // Instance pre init
@@ -213,6 +218,7 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->display_line_2 = "";
   this->previous_display_line_1 = "";
   this->previous_display_line_2 = "";
+  this->customDisplayRefresh = nullptr;
 }
 
 /**
@@ -283,7 +289,7 @@ inline void NervousSuperMother::update(){
   }
   if (this->clockMain > this->intervalClockMain / 2) {
    if (this->clockDisplay >= this->intervalDisplay) {
-     // this->refreshDisplay();
+     this->refreshDisplay();
      this->clockDisplay = 0;
    }
   }else{
@@ -462,7 +468,7 @@ inline int NervousSuperMother::getInput(byte index){
     break;
     case 4:
     // Encoder
-    // Device is not saving the encoders values, only the latest change
+    // Device is not saving encoders values, only the latest change
     int value = this->encoders[index];
     this->encoders[index] = 0;
     return value;
@@ -569,9 +575,9 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   */
   inline void NervousSuperMother::readEncoder(byte inputIndex) {
     // Get rotary encoder value
+    this->encoders[inputIndex] = encoders_knob[inputIndex].read();
     // Reverse
     if(this->encodersMaxValue[inputIndex] < 0){
-      this->encoders[inputIndex] = encoders_knob[inputIndex].read();
       if(this->encoders[inputIndex] < this->encodersMaxValue[inputIndex]-2){
         this->encoders[inputIndex] = 0;
         encoders_knob[inputIndex].write(0);
@@ -580,16 +586,8 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
         this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
         encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
       }
-      if (this->encoders[inputIndex]%4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex]) {
-        this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
-        // Calling the Encoder callback if there is one
-        if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
-          this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex])/4);
-        }
-      }
     // Normal
     }else {
-      this->encoders[inputIndex] = encoders_knob[inputIndex].read();
       if(this->encoders[inputIndex] > this->encodersMaxValue[inputIndex]+2){
         this->encoders[inputIndex] = 0;
         encoders_knob[inputIndex].write(0);
@@ -598,12 +596,12 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
         this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
         encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
       }
-      if (this->encoders[inputIndex]%4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex]) {
-        this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
-        // Calling the Encoder callback if there is one
-        if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
-          this->inputsEncoderChangeCallback[inputIndex](inputIndex, this->encoders[inputIndex]/4);
-        }
+    }
+    if (this->encoders[inputIndex]%4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex]) {
+      this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
+      // Calling the Encoder callback if there is one
+      if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
+        this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex])/4);
       }
     }
   }
@@ -617,6 +615,7 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
 
   /**
   * Update encoders max value
+  * < 0 for reversed mode 
   */
   inline void NervousSuperMother::updateEncodeursMaxValue(byte inputIndex, long encoderMax) {
     this->encodersMaxValue[inputIndex] = encoderMax*4;
@@ -626,7 +625,11 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   * Update encoders value
   */
   inline void NervousSuperMother::updateEncodeursValue(byte inputIndex, long encoderValue) {
-    encoders_knob[inputIndex].write(encoderValue*4);
+    if(this->encodersMaxValue[inputIndex]<0){
+      encoders_knob[inputIndex].write(-(encoderValue*4));
+    }else{
+      encoders_knob[inputIndex].write(encoderValue*4);
+    }
   }
 
   /**
@@ -690,7 +693,14 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   }
 
   /**
-  * Update line to display
+  * Handle custom display refresh
+  */
+  inline void NervousSuperMother::setCustomDisplayRefresh(CustomDisplayRefresh fptr){
+    this->customDisplayRefresh = fptr;
+  }
+
+  /**
+  * Update entire line to display
   */
   inline void NervousSuperMother::updateLine(byte line_nb, String line) {
     if(line_nb == 1){
@@ -720,28 +730,46 @@ inline void NervousSuperMother::readButton(byte buttonIndex) {
   }
 
   /**
+  * Update one char in line to display
+  */
+  inline void NervousSuperMother::updateOneChar(byte line_nb, char one_char, int index) {
+    if(index < 20 && index >= 0){
+      if(line_nb == 1){
+        this->display_line_1[index] = one_char;
+        lcd.setCursor(0, 0);
+        lcd.print(this->display_line_1);
+      }else if(line_nb == 2){
+        this->display_line_2[index] = one_char;
+        lcd.setCursor(0, 1);
+        lcd.print(this->display_line_2);
+      }
+    }
+  }
+
+  /**
   * Refresh the display
   */
-  inline void NervousSuperMother::refreshDisplay() {
-    if(this->display_line_1 != this->previous_display_line_1){
-      if(this->display_line_1.length() < 20){
-        for(byte i = this->display_line_1.length(); i < 20; i++){
-          this->display_line_1 = this->display_line_1 + " ";
-        }
-      }
+  inline void NervousSuperMother::refreshDisplay(bool force) {
+    if(force){
       lcd.setCursor(0, 0);
       lcd.print(this->display_line_1);
-      this->previous_display_line_1 = this->display_line_1;
-    }
-    if(this->display_line_2 != this->previous_display_line_2){
-      if(this->display_line_2.length() < 20){
-        for(byte i = this->display_line_2.length(); i < 20; i++){
-          this->display_line_2 = this->display_line_2 + " ";
-        }
-      }
       lcd.setCursor(0, 1);
       lcd.print(this->display_line_2);
-      this->previous_display_line_2 = this->display_line_2;
+    }
+    else {
+      if(this->display_line_1 != this->previous_display_line_1){
+        lcd.setCursor(0, 0);
+        lcd.print(this->display_line_1);
+        this->previous_display_line_1 = this->display_line_1;
+      }
+      if(this->display_line_2 != this->previous_display_line_2){
+        lcd.setCursor(0, 1);
+        lcd.print(this->display_line_2);
+        this->previous_display_line_2 = this->display_line_2;
+      }
+    }
+    if(this->customDisplayRefresh != nullptr){
+      this->customDisplayRefresh();
     }
   }
 

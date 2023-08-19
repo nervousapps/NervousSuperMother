@@ -12,7 +12,7 @@
 #include <Encoder.h>
 #include "pins.h"
 
-const byte analogResolution = 10;
+const byte ANALOGRESOLUTION = 10;
 
 // ******ANALOG CONSTANT VALUES********
 const int ANALOG_CONTROL_PINS = 3;

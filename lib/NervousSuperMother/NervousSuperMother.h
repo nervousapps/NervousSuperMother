@@ -5,10 +5,11 @@
 #include "display/Display.h"
 
 /*
-* NervousSuperMother(withDaddy)
-* v0.4.0 beta
-*/
-class NervousSuperMother{
+ * NervousSuperMother(withDaddy)
+ * v0.4.0 beta
+ */
+class NervousSuperMother
+{
 
 private:
   static NervousSuperMother *instance;
@@ -92,7 +93,6 @@ private:
   const unsigned int intervalInputs = 100;
   elapsedMicros clockInputs;
 
-
 public:
   static NervousSuperMother *getInstance();
   void init(byte *inputs);
@@ -124,14 +124,16 @@ public:
 };
 
 // Instance pre init
-NervousSuperMother * NervousSuperMother::instance = nullptr;
+NervousSuperMother *NervousSuperMother::instance = nullptr;
 
 /**
-* Constructor
-*/
-FLASHMEM NervousSuperMother::NervousSuperMother(){
+ * Constructor
+ */
+FLASHMEM NervousSuperMother::NervousSuperMother()
+{
   this->inputs = new byte[this->ioNumber];
-  for(byte i = 0; i < this->ioNumber; i++){
+  for (byte i = 0; i < this->ioNumber; i++)
+  {
     this->inputs[i] = 0;
   }
 
@@ -141,7 +143,8 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->switchesPrevious = new bool[ANALOG_CONTROL_PINS];
   this->inputsSwitchesChangeCallback = new SwitchChangeCallback[ANALOG_CONTROL_PINS];
 
-  for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
+  for (byte i = 0; i < ANALOG_CONTROL_PINS; i++)
+  {
     this->switches[i] = 0;
     this->switchesPrevious[i] = 0;
     this->inputsSwitchesChangeCallback[i] = nullptr;
@@ -152,7 +155,8 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->muxcontrolsPrevious = new unsigned int[MnumControls];
   this->inputsMuxControlsChangeCallback = new MuxControlChangeCallback[MnumControls];
 
-  for(byte i = 0; i < MnumControls; i++){
+  for (byte i = 0; i < MnumControls; i++)
+  {
     this->muxcontrols[i] = 0;
     this->muxcontrolsPrevious[i] = 0;
     this->inputsMuxControlsChangeCallback[i] = nullptr;
@@ -167,7 +171,8 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->inputsDoublePressCallback = new LongPressCallback[BUTTON_PINS];
   this->inputsPressTime = new elapsedMillis[BUTTON_PINS];
 
-  for(byte i = 0; i < BUTTON_PINS; i++){
+  for (byte i = 0; i < BUTTON_PINS; i++)
+  {
     this->buttons[i] = true;
     this->pushed[i] = false;
     this->inputsPressCallback[i] = nullptr;
@@ -183,7 +188,8 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->inputsEncoderChangeCallback = new EncoderChangeCallback[NB_ENCODER];
   this->encodersMaxValue = new long[NB_ENCODER];
 
-  for(byte i = 0; i < NB_ENCODER; i++){
+  for (byte i = 0; i < NB_ENCODER; i++)
+  {
     this->encoders[i] = 0;
     this->encodersPrevious[i] = -999;
     this->inputsEncoderChangeCallback[i] = nullptr;
@@ -193,11 +199,13 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   // Triggers
   this->triggerIndex = 0;
   this->inputsFallingTriggerCallback = new FallingTriggerCallback[TRIGGER_PINS];
-  for(byte i = 0; i < TRIGGER_PINS; i++){
+  for (byte i = 0; i < TRIGGER_PINS; i++)
+  {
     this->inputsFallingTriggerCallback[i] = nullptr;
   }
   this->inputsRisingTriggerCallback = new RisingTriggerCallback[TRIGGER_PINS];
-  for(byte i = 0; i < TRIGGER_PINS; i++){
+  for (byte i = 0; i < TRIGGER_PINS; i++)
+  {
     this->inputsRisingTriggerCallback[i] = nullptr;
   }
 
@@ -207,7 +215,8 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
   this->cvsPrevious = new unsigned int[CV_PINS];
   this->inputsCVChangeCallback = new CVChangeCallback[CV_PINS];
 
-  for(byte i = 0; i < CV_PINS; i++){
+  for (byte i = 0; i < CV_PINS; i++)
+  {
     this->cvs[i] = 0;
     this->cvsPrevious[i] = 0;
     this->inputsCVChangeCallback[i] = nullptr;
@@ -222,19 +231,22 @@ FLASHMEM NervousSuperMother::NervousSuperMother(){
 }
 
 /**
-* Singleton instance
-*/
-FLASHMEM inline NervousSuperMother *NervousSuperMother::getInstance()    {
+ * Singleton instance
+ */
+FLASHMEM inline NervousSuperMother *NervousSuperMother::getInstance()
+{
   if (!instance)
-  instance = new NervousSuperMother;
+    instance = new NervousSuperMother;
   return instance;
 }
 
 /**
-* Init
-*/
-FLASHMEM inline void NervousSuperMother::init(byte *inputs){
-  for(byte i = 0; i < this->ioNumber; i++){
+ * Init
+ */
+FLASHMEM inline void NervousSuperMother::init(byte *inputs)
+{
+  for (byte i = 0; i < this->ioNumber; i++)
+  {
     this->inputs[i] = inputs[i];
   }
   setup_hardware_controls();
@@ -242,9 +254,10 @@ FLASHMEM inline void NervousSuperMother::init(byte *inputs){
 }
 
 /**
-* Reset
-*/
-inline void NervousSuperMother::resetHandlers(){
+ * Reset
+ */
+inline void NervousSuperMother::resetHandlers()
+{
   // Reset switch handlers
   // for(byte i = 0; i < ANALOG_CONTROL_PINS; i++){
   //   this->switches[i] = 0;
@@ -253,14 +266,16 @@ inline void NervousSuperMother::resetHandlers(){
   // }
 
   // Reset muxers handlers
-  for(byte i = 0; i < MnumControls; i++){
+  for (byte i = 0; i < MnumControls; i++)
+  {
     this->muxcontrols[i] = 0;
     this->muxcontrolsPrevious[i] = 0;
     this->inputsMuxControlsChangeCallback[i] = nullptr;
   }
 
   // Reset buttons handlers
-  for(byte i = 0; i < BUTTON_PINS; i++){
+  for (byte i = 0; i < BUTTON_PINS; i++)
+  {
     this->buttons[i] = true;
     this->pushed[i] = false;
     this->inputsPressCallback[i] = nullptr;
@@ -270,7 +285,8 @@ inline void NervousSuperMother::resetHandlers(){
   }
 
   // Reset encoders handlers
-  for(byte i = 0; i < NB_ENCODER; i++){
+  for (byte i = 0; i < NB_ENCODER; i++)
+  {
     this->encoders[i] = 0;
     this->encodersPrevious[i] = -999;
     this->inputsEncoderChangeCallback[i] = nullptr;
@@ -279,27 +295,36 @@ inline void NervousSuperMother::resetHandlers(){
 }
 
 /**
-* Update
-*/
-inline void NervousSuperMother::update(){
+ * Update
+ */
+inline void NervousSuperMother::update()
+{
   this->readMux();
   // Main clock
-  if (this->clockMain >= this->intervalClockMain) {
+  if (this->clockMain >= this->intervalClockMain)
+  {
     this->clockMain = 0;
   }
-  if (this->clockMain > this->intervalClockMain / 2) {
-   if (this->clockDisplay >= this->intervalDisplay) {
-     this->refreshDisplay();
-     this->clockDisplay = 0;
-   }
-  }else{
+  if (this->clockMain > this->intervalClockMain / 2)
+  {
+    if (this->clockDisplay >= this->intervalDisplay)
+    {
+      this->refreshDisplay();
+      this->clockDisplay = 0;
+    }
+  }
+  else
+  {
     // AudioNoInterrupts();
     // Inputs
     // At the end of the clock we iterate to next input
-    if (this->clockInputs >= this->intervalInputs) {
+    if (this->clockInputs >= this->intervalInputs)
+    {
       this->iterateInputs();
       this->clockInputs = 0;
-    }else{
+    }
+    else
+    {
       // Reading the current input
       this->readCurrentInput();
     }
@@ -308,71 +333,90 @@ inline void NervousSuperMother::update(){
 }
 
 /**
-* Iterate over the inputs
-*/
-inline void NervousSuperMother::iterateInputs(){
+ * Iterate over the inputs
+ */
+inline void NervousSuperMother::iterateInputs()
+{
   this->currentInput++;
   this->currentInput = this->currentInput % this->ioNumber;
 }
 
 /**
-* Read value of current inout
-*/
-inline void NervousSuperMother::readCurrentInput(){
-  switch(this->inputs[this->currentInput]){
-    default:
-    case 0:
+ * Read value of current inout
+ */
+inline void NervousSuperMother::readCurrentInput()
+{
+  switch (this->inputs[this->currentInput])
+  {
+  default:
+  case 0:
     // Silence is golden
     break;
 
-    case 1:
-    if(this->switchIndex < ANALOG_CONTROL_PINS) {
+  case 1:
+    if (this->switchIndex < ANALOG_CONTROL_PINS)
+    {
       this->readSwitch(this->switchIndex);
-      this->switchIndex ++;
-    } else {
+      this->switchIndex++;
+    }
+    else
+    {
       this->switchIndex = 0;
     }
     break;
 
-    case 2:
-    if(this->buttonIndex < BUTTON_PINS) {
+  case 2:
+    if (this->buttonIndex < BUTTON_PINS)
+    {
       this->readButton(this->buttonIndex);
-      this->buttonIndex ++;
-    }else {
+      this->buttonIndex++;
+    }
+    else
+    {
       this->buttonIndex = 0;
     }
     break;
 
-    case 3:
-    if(this->encoderIndex < NB_ENCODER) {
+  case 3:
+    if (this->encoderIndex < NB_ENCODER)
+    {
       this->readEncoder(this->encoderIndex);
-      this->encoderIndex ++;
-    }else {
+      this->encoderIndex++;
+    }
+    else
+    {
       this->encoderIndex = 0;
     }
     break;
 
-    case 4:
-    if(this->triggerIndex < TRIGGER_PINS) {
+  case 4:
+    if (this->triggerIndex < TRIGGER_PINS)
+    {
       this->readTrigger(this->triggerIndex);
-      this->triggerIndex ++;
-    }else {
+      this->triggerIndex++;
+    }
+    else
+    {
       this->triggerIndex = 0;
     }
     break;
 
-    case 5:
-    if(this->cvIndex < CV_PINS) {
+  case 5:
+    if (this->cvIndex < CV_PINS)
+    {
       this->readCV(this->cvIndex);
-      this->cvIndex ++;
-    }else {
+      this->cvIndex++;
+    }
+    else
+    {
       this->cvIndex = 0;
     }
     break;
 
-    case 6:
+  case 6:
     volPot.update();
-    if(volPot.hasChanged()){
+    if (volPot.hasChanged())
+    {
       this->inputsvolChangeCallback(volPot.getValue());
     }
     break;
@@ -380,54 +424,66 @@ inline void NervousSuperMother::readCurrentInput(){
 }
 
 /**
-* Get switch value
-* @param byte inputeIndex The index of the input
-*/
-inline void NervousSuperMother::readSwitch(byte inputIndex){
+ * Get switch value
+ * @param byte inputeIndex The index of the input
+ */
+inline void NervousSuperMother::readSwitch(byte inputIndex)
+{
   analog_controls[inputIndex].update();
-  if(analog_controls[inputIndex].hasChanged()){
+  if (analog_controls[inputIndex].hasChanged())
+  {
     int val = analog_controls[inputIndex].getValue();
 
-    if(val > 100){
+    if (val > 100)
+    {
       this->switches[inputIndex] = true;
-    }else{
+    }
+    else
+    {
       this->switches[inputIndex] = false;
     }
 
-    if(this->switches[inputIndex] != this->switchesPrevious[inputIndex]){
+    if (this->switches[inputIndex] != this->switchesPrevious[inputIndex])
+    {
       // Calling the switch callback if there is one
-      if(this->inputsSwitchesChangeCallback[inputIndex] != nullptr){
+      if (this->inputsSwitchesChangeCallback[inputIndex] != nullptr)
+      {
         this->inputsSwitchesChangeCallback[inputIndex](inputIndex, this->switches[inputIndex]);
       }
     }
     this->switchesPrevious[inputIndex] = this->switches[inputIndex];
   }
-
 }
 
 /**
-* Get muxer controls value
-*/
-inline void NervousSuperMother::readMux() {
+ * Get muxer controls value
+ */
+inline void NervousSuperMother::readMux()
+{
   static byte muxInput = 0;
   static int muxValues[MnumControls] = {};
   // Mux clock
   static unsigned long clockMux = 0;
   unsigned long intervalMux = micros();
 
-  if(intervalMux - clockMux >= 1000){
+  if (intervalMux - clockMux >= 1000)
+  {
     clockMux = intervalMux;
     mux_read.update();
-    if(mux_read.hasChanged()){
+    if (mux_read.hasChanged())
+    {
       int muxRead = mux_read.getValue();
-      if (muxRead > (muxValues[muxInput] + 7) || muxRead < (muxValues[muxInput] - 7)) {
+      if (muxRead > (muxValues[muxInput] + 7) || muxRead < (muxValues[muxInput] - 7))
+      {
         muxValues[muxInput] = muxRead;
-        muxRead = (muxRead >> 3); //Change range to 0-127
+        muxRead = (muxRead >> 3); // Change range to 0-127
         this->muxcontrols[muxInput] = muxRead;
-        if(this->muxcontrols[muxInput] != this->muxcontrolsPrevious[muxInput]){
+        if (this->muxcontrols[muxInput] != this->muxcontrolsPrevious[muxInput])
+        {
           // Calling the control callback if there is one
-          if(this->inputsMuxControlsChangeCallback[muxInput] != nullptr){
-            this->inputsMuxControlsChangeCallback[muxInput](muxInput, this->muxcontrols[muxInput], this->muxcontrols[muxInput] - this->muxcontrolsPrevious[muxInput] );
+          if (this->inputsMuxControlsChangeCallback[muxInput] != nullptr)
+          {
+            this->inputsMuxControlsChangeCallback[muxInput](muxInput, this->muxcontrols[muxInput], this->muxcontrols[muxInput] - this->muxcontrolsPrevious[muxInput]);
           }
         }
         this->muxcontrolsPrevious[muxInput] = this->muxcontrols[muxInput];
@@ -435,7 +491,8 @@ inline void NervousSuperMother::readMux() {
     }
 
     muxInput++;
-    if (muxInput >= MnumControls) muxInput = 0;
+    if (muxInput >= MnumControls)
+      muxInput = 0;
     digitalWrite(MS0, muxInput & B0001);
     digitalWrite(MS1, muxInput & B0010);
     digitalWrite(MS2, muxInput & B0100);
@@ -444,29 +501,31 @@ inline void NervousSuperMother::readMux() {
 }
 
 /**
-* Get input value
-* @param byte index The index of the input
-*/
-inline int NervousSuperMother::getInput(byte index){
-  switch(this->inputs[index]){
-    default:
-    case 0:
+ * Get input value
+ * @param byte index The index of the input
+ */
+inline int NervousSuperMother::getInput(byte index)
+{
+  switch (this->inputs[index])
+  {
+  default:
+  case 0:
     // Empty
     return 0;
     break;
-    case 1:
+  case 1:
     // Buttons
     return !this->buttons[index];
     break;
-    case 2:
+  case 2:
     // Mux controls
     return this->muxcontrols[index];
     break;
-    case 3:
+  case 3:
     // Mux controls
     return this->switches[index];
     break;
-    case 4:
+  case 4:
     // Encoder
     // Device is not saving encoders values, only the latest change
     int value = this->encoders[index];
@@ -477,300 +536,371 @@ inline int NervousSuperMother::getInput(byte index){
 }
 
 /**
-* Get min analog value according to resolution
-*/
-inline int NervousSuperMother::getAnalogMinValue(){
+ * Get min analog value according to resolution
+ */
+inline int NervousSuperMother::getAnalogMinValue()
+{
   return 0;
 }
 
 /**
-* Get max analog value according to resolution
-*/
-inline int NervousSuperMother::getAnalogMaxValue(){
+ * Get max analog value according to resolution
+ */
+inline int NervousSuperMother::getAnalogMaxValue()
+{
   return (1 << this->analogResolution) - 1;
 }
 
 /**
-* Handle volume pot
-*/
-inline void NervousSuperMother::setHandleVolChange(volChangeCallback fptr){
+ * Handle volume pot
+ */
+inline void NervousSuperMother::setHandleVolChange(volChangeCallback fptr)
+{
   this->inputsvolChangeCallback = fptr;
 }
 
 /**
-* Handle switches
-*/
-inline void NervousSuperMother::setHandleSwitchChange(byte inputIndex, SwitchChangeCallback fptr){
+ * Handle switches
+ */
+inline void NervousSuperMother::setHandleSwitchChange(byte inputIndex, SwitchChangeCallback fptr)
+{
   this->inputsSwitchesChangeCallback[inputIndex] = fptr;
 }
 
 /**
-* Handle Mux controls
-*/
-inline void NervousSuperMother::setHandleMuxControlChange(byte inputIndex, MuxControlChangeCallback fptr){
+ * Handle Mux controls
+ */
+inline void NervousSuperMother::setHandleMuxControlChange(byte inputIndex, MuxControlChangeCallback fptr)
+{
   this->inputsMuxControlsChangeCallback[inputIndex] = fptr;
 }
 
 /**
-* Get button value
-* @param byte inputeIndex The index of the input
-*/
-inline void NervousSuperMother::readButton(byte buttonIndex) {
+ * Get button value
+ * @param byte inputeIndex The index of the input
+ */
+inline void NervousSuperMother::readButton(byte buttonIndex)
+{
   // If there is a short or a long press callback on that input
-  if(this->inputsPressCallback[buttonIndex] != nullptr ||
-    this->inputsDoublePressCallback[buttonIndex] != nullptr ||
-    this->inputsLongPressCallback[buttonIndex] != nullptr) {
-      if(digital_button[buttonIndex].update()){
-        if(digital_button[buttonIndex].fallingEdge()){
-          this->pushed[buttonIndex] = true;
-          if(this->inputsPressTime[buttonIndex] <= 400 && this->pushed[buttonIndex]){
-            if(this->inputsDoublePressCallback[buttonIndex] != nullptr){
-              this->inputsDoublePressCallback[buttonIndex](buttonIndex);
-            }
+  if (this->inputsPressCallback[buttonIndex] != nullptr ||
+      this->inputsDoublePressCallback[buttonIndex] != nullptr ||
+      this->inputsLongPressCallback[buttonIndex] != nullptr)
+  {
+    if (digital_button[buttonIndex].update())
+    {
+      if (digital_button[buttonIndex].fallingEdge())
+      {
+        this->pushed[buttonIndex] = true;
+        if (this->inputsPressTime[buttonIndex] <= 400 && this->pushed[buttonIndex])
+        {
+          if (this->inputsDoublePressCallback[buttonIndex] != nullptr)
+          {
+            this->inputsDoublePressCallback[buttonIndex](buttonIndex);
           }
-          this->inputsPressTime[buttonIndex] = 0;
         }
+        this->inputsPressTime[buttonIndex] = 0;
+      }
 
-        if(digital_button[buttonIndex].risingEdge()){
-          if(this->inputsPressTime[buttonIndex] > 150 && this->inputsPressTime[buttonIndex] < 500){
-            if(this->inputsPressCallback[buttonIndex] != nullptr){
-              this->inputsPressCallback[buttonIndex](buttonIndex);
-            }
+      if (digital_button[buttonIndex].risingEdge())
+      {
+        if (this->inputsPressTime[buttonIndex] > 150 && this->inputsPressTime[buttonIndex] < 500)
+        {
+          if (this->inputsPressCallback[buttonIndex] != nullptr)
+          {
+            this->inputsPressCallback[buttonIndex](buttonIndex);
           }
-          this->pushed[buttonIndex] = false;
-        }
-      }else if(this->inputsPressTime[buttonIndex] >= 800 && this->pushed[buttonIndex]){
-        if(this->inputsLongPressCallback[buttonIndex] != nullptr){
-          this->inputsLongPressCallback[buttonIndex](buttonIndex);
         }
         this->pushed[buttonIndex] = false;
       }
     }
-  }
-
-  /**
-  * Handle press down on a button
-  */
-  inline void NervousSuperMother::setHandlePress(byte inputIndex, PressCallback fptr){
-    this->inputsPressCallback[inputIndex] = fptr;
-  }
-
-  /**
-  * Handle press up on a button
-  */
-  inline void NervousSuperMother::setHandleDoublePress(byte inputIndex, DoublePressCallback fptr){
-    this->inputsDoublePressCallback[inputIndex] = fptr;
-  }
-
-  /**
-  * Handle long press down on a button
-  */
-  inline void NervousSuperMother::setHandleLongPress(byte inputIndex, LongPressCallback fptr){
-    this->inputsLongPressCallback[inputIndex] = fptr;
-  }
-
-  /**
-  * Get encoder value
-  * @param byte inputeIndex The index of the input
-  */
-  inline void NervousSuperMother::readEncoder(byte inputIndex) {
-    // Get rotary encoder value
-    this->encoders[inputIndex] = encoders_knob[inputIndex].read();
-    // Reverse
-    if(this->encodersMaxValue[inputIndex] < 0){
-      if(this->encoders[inputIndex] < this->encodersMaxValue[inputIndex]-2){
-        this->encoders[inputIndex] = 0;
-        encoders_knob[inputIndex].write(0);
+    else if (this->inputsPressTime[buttonIndex] >= 800 && this->pushed[buttonIndex])
+    {
+      if (this->inputsLongPressCallback[buttonIndex] != nullptr)
+      {
+        this->inputsLongPressCallback[buttonIndex](buttonIndex);
       }
-      if(this->encoders[inputIndex] > 2){
-        this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
-        encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
-      }
+      this->pushed[buttonIndex] = false;
+    }
+  }
+}
+
+/**
+ * Handle press down on a button
+ */
+inline void NervousSuperMother::setHandlePress(byte inputIndex, PressCallback fptr)
+{
+  this->inputsPressCallback[inputIndex] = fptr;
+}
+
+/**
+ * Handle press up on a button
+ */
+inline void NervousSuperMother::setHandleDoublePress(byte inputIndex, DoublePressCallback fptr)
+{
+  this->inputsDoublePressCallback[inputIndex] = fptr;
+}
+
+/**
+ * Handle long press down on a button
+ */
+inline void NervousSuperMother::setHandleLongPress(byte inputIndex, LongPressCallback fptr)
+{
+  this->inputsLongPressCallback[inputIndex] = fptr;
+}
+
+/**
+ * Get encoder value
+ * @param byte inputeIndex The index of the input
+ */
+inline void NervousSuperMother::readEncoder(byte inputIndex)
+{
+  // Get rotary encoder value
+  this->encoders[inputIndex] = encoders_knob[inputIndex].read();
+  // Reverse
+  if (this->encodersMaxValue[inputIndex] < 0)
+  {
+    if (this->encoders[inputIndex] < this->encodersMaxValue[inputIndex] - 2)
+    {
+      this->encoders[inputIndex] = 0;
+      encoders_knob[inputIndex].write(0);
+    }
+    if (this->encoders[inputIndex] > 2)
+    {
+      this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
+      encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
+    }
     // Normal
-    }else {
-      if(this->encoders[inputIndex] > this->encodersMaxValue[inputIndex]+2){
-        this->encoders[inputIndex] = 0;
-        encoders_knob[inputIndex].write(0);
-      }
-      if(this->encoders[inputIndex] < -2){
-        this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
-        encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
-      }
+  }
+  else
+  {
+    if (this->encoders[inputIndex] > this->encodersMaxValue[inputIndex] + 2)
+    {
+      this->encoders[inputIndex] = 0;
+      encoders_knob[inputIndex].write(0);
     }
-    if (this->encoders[inputIndex]%4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex]) {
-      this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
-      // Calling the Encoder callback if there is one
-      if(this->inputsEncoderChangeCallback[inputIndex] != nullptr){
-        this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex])/4);
-      }
+    if (this->encoders[inputIndex] < -2)
+    {
+      this->encoders[inputIndex] = this->encodersMaxValue[inputIndex];
+      encoders_knob[inputIndex].write(this->encodersMaxValue[inputIndex]);
     }
   }
-
-  /**
-  * Handle encoder change
-  */
-  inline void NervousSuperMother::setHandleEncoderChange(byte inputIndex, EncoderChangeCallback fptr) {
-    this->inputsEncoderChangeCallback[inputIndex] = fptr;
-  }
-
-  /**
-  * Update encoders max value
-  * < 0 for reversed mode 
-  */
-  inline void NervousSuperMother::updateEncodeursMaxValue(byte inputIndex, long encoderMax) {
-    this->encodersMaxValue[inputIndex] = encoderMax*4;
-  }
-
-  /**
-  * Update encoders value
-  */
-  inline void NervousSuperMother::updateEncodeursValue(byte inputIndex, long encoderValue) {
-    if(this->encodersMaxValue[inputIndex]<0){
-      encoders_knob[inputIndex].write(-(encoderValue*4));
-    }else{
-      encoders_knob[inputIndex].write(encoderValue*4);
+  if (this->encoders[inputIndex] % 4 == 0 && this->encoders[inputIndex] != this->encodersPrevious[inputIndex])
+  {
+    this->encodersPrevious[inputIndex] = this->encoders[inputIndex];
+    // Calling the Encoder callback if there is one
+    if (this->inputsEncoderChangeCallback[inputIndex] != nullptr)
+    {
+      this->inputsEncoderChangeCallback[inputIndex](inputIndex, abs(this->encoders[inputIndex]) / 4);
     }
   }
+}
 
-  /**
-  * Get trigger
-  * @param byte inputeIndex The index of the input
-  */
-  inline void NervousSuperMother::readTrigger(byte inputIndex){
-    digital_trigger[inputIndex].update();
-    if (digital_trigger[inputIndex].fallingEdge()) {
-      if(this->inputsFallingTriggerCallback[inputIndex] != nullptr){
-        this->inputsFallingTriggerCallback[inputIndex](inputIndex);
-      }
-    }
-    if (digital_trigger[inputIndex].risingEdge()) {
-      if(this->inputsRisingTriggerCallback[inputIndex] != nullptr){
-        this->inputsRisingTriggerCallback[inputIndex](inputIndex);
-      }
-    }
+/**
+ * Handle encoder change
+ */
+inline void NervousSuperMother::setHandleEncoderChange(byte inputIndex, EncoderChangeCallback fptr)
+{
+  this->inputsEncoderChangeCallback[inputIndex] = fptr;
+}
+
+/**
+ * Update encoders max value
+ * < 0 for reversed mode
+ */
+inline void NervousSuperMother::updateEncodeursMaxValue(byte inputIndex, long encoderMax)
+{
+  this->encodersMaxValue[inputIndex] = encoderMax * 4;
+}
+
+/**
+ * Update encoders value
+ */
+inline void NervousSuperMother::updateEncodeursValue(byte inputIndex, long encoderValue)
+{
+  if (this->encodersMaxValue[inputIndex] < 0)
+  {
+    encoders_knob[inputIndex].write(-(encoderValue * 4));
   }
-
-  /**
-  * Handle falling trigger
-  */
-  inline void NervousSuperMother::setHandleFallingTrigger(byte inputIndex, FallingTriggerCallback fptr){
-    this->inputsFallingTriggerCallback[inputIndex] = fptr;
+  else
+  {
+    encoders_knob[inputIndex].write(encoderValue * 4);
   }
+}
 
-  /**
-  * Handle rising trigger
-  */
-  inline void NervousSuperMother::setHandleRisingTrigger(byte inputIndex, RisingTriggerCallback fptr){
-    this->inputsRisingTriggerCallback[inputIndex] = fptr;
-  }
-
-  /**
-  * Get CVx value
-  * @param byte inputeIndex The index of the input
-  */
-  inline void NervousSuperMother::readCV(byte inputIndex){
-    cv_controls[inputIndex].update();
-    if(cv_controls[inputIndex].hasChanged()){
-      int value = cv_controls[inputIndex].getValue();
-      if(value < 940){
-        this->cvs[inputIndex] = value;
-      }
-      if(this->cvs[inputIndex] != this->cvsPrevious[inputIndex]){
-        // Calling the CV callback if there is one
-        if(this->inputsCVChangeCallback[inputIndex] != nullptr){
-          this->inputsCVChangeCallback[inputIndex](inputIndex, this->cvs[inputIndex], this->cvs[inputIndex] - this->cvsPrevious[inputIndex] );
-        }
-      }
-      this->cvsPrevious[inputIndex] = this->cvs[inputIndex];
+/**
+ * Get trigger
+ * @param byte inputeIndex The index of the input
+ */
+inline void NervousSuperMother::readTrigger(byte inputIndex)
+{
+  digital_trigger[inputIndex].update();
+  if (digital_trigger[inputIndex].fallingEdge())
+  {
+    if (this->inputsFallingTriggerCallback[inputIndex] != nullptr)
+    {
+      this->inputsFallingTriggerCallback[inputIndex](inputIndex);
     }
   }
-
-  /**
-  * Handle CVs
-  */
-  inline void NervousSuperMother::setHandleCVChange(byte inputIndex, CVChangeCallback fptr){
-    this->inputsCVChangeCallback[inputIndex] = fptr;
+  if (digital_trigger[inputIndex].risingEdge())
+  {
+    if (this->inputsRisingTriggerCallback[inputIndex] != nullptr)
+    {
+      this->inputsRisingTriggerCallback[inputIndex](inputIndex);
+    }
   }
+}
 
-  /**
-  * Handle custom display refresh
-  */
-  inline void NervousSuperMother::setCustomDisplayRefresh(CustomDisplayRefresh fptr){
-    this->customDisplayRefresh = fptr;
-  }
+/**
+ * Handle falling trigger
+ */
+inline void NervousSuperMother::setHandleFallingTrigger(byte inputIndex, FallingTriggerCallback fptr)
+{
+  this->inputsFallingTriggerCallback[inputIndex] = fptr;
+}
 
-  /**
-  * Update entire line to display
-  */
-  inline void NervousSuperMother::updateLine(byte line_nb, String line) {
-    if(line_nb == 1){
-      this->display_line_1 = line;
-      if(this->display_line_1.length() < 20){
-        for(byte i = this->display_line_1.length(); i < 20; i++){
-          this->display_line_1 = this->display_line_1 + " ";
-        }
+/**
+ * Handle rising trigger
+ */
+inline void NervousSuperMother::setHandleRisingTrigger(byte inputIndex, RisingTriggerCallback fptr)
+{
+  this->inputsRisingTriggerCallback[inputIndex] = fptr;
+}
+
+/**
+ * Get CVx value
+ * @param byte inputeIndex The index of the input
+ */
+inline void NervousSuperMother::readCV(byte inputIndex)
+{
+  cv_controls[inputIndex].update();
+  if (cv_controls[inputIndex].hasChanged())
+  {
+    int value = cv_controls[inputIndex].getValue();
+    if (value < 940)
+    {
+      this->cvs[inputIndex] = value;
+    }
+    if (this->cvs[inputIndex] != this->cvsPrevious[inputIndex])
+    {
+      // Calling the CV callback if there is one
+      if (this->inputsCVChangeCallback[inputIndex] != nullptr)
+      {
+        this->inputsCVChangeCallback[inputIndex](inputIndex, this->cvs[inputIndex], this->cvs[inputIndex] - this->cvsPrevious[inputIndex]);
       }
+    }
+    this->cvsPrevious[inputIndex] = this->cvs[inputIndex];
+  }
+}
+
+/**
+ * Handle CVs
+ */
+inline void NervousSuperMother::setHandleCVChange(byte inputIndex, CVChangeCallback fptr)
+{
+  this->inputsCVChangeCallback[inputIndex] = fptr;
+}
+
+/**
+ * Handle custom display refresh
+ */
+inline void NervousSuperMother::setCustomDisplayRefresh(CustomDisplayRefresh fptr)
+{
+  this->customDisplayRefresh = fptr;
+}
+
+/**
+ * Update entire line to display
+ */
+inline void NervousSuperMother::updateLine(byte line_nb, String line)
+{
+  if (line_nb == 1)
+  {
+    this->display_line_1 = line;
+    if (this->display_line_1.length() < 20)
+    {
+      for (byte i = this->display_line_1.length(); i < 20; i++)
+      {
+        this->display_line_1 = this->display_line_1 + " ";
+      }
+    }
+    lcd.setCursor(0, 0);
+    lcd.print(this->display_line_1);
+  }
+  else if (line_nb == 2)
+  {
+    this->display_line_2 = line;
+    if (this->display_line_2.length() < 20)
+    {
+      for (byte i = this->display_line_2.length(); i < 20; i++)
+      {
+        this->display_line_2 = this->display_line_2 + " ";
+      }
+    }
+    lcd.setCursor(0, 1);
+    lcd.print(this->display_line_2);
+  }
+  else if (line_nb == -1)
+  {
+    lcd.setCursor(0, 0);
+    lcd.print(this->display_line_1);
+    lcd.setCursor(0, 1);
+    lcd.print(this->display_line_2);
+  }
+}
+
+/**
+ * Update one char in line to display
+ */
+inline void NervousSuperMother::updateOneChar(byte line_nb, char one_char, int index)
+{
+  if (index < 20 && index >= 0)
+  {
+    if (line_nb == 1)
+    {
+      this->display_line_1[index] = one_char;
       lcd.setCursor(0, 0);
       lcd.print(this->display_line_1);
-    }else if(line_nb == 2){
-      this->display_line_2 = line;
-      if(this->display_line_2.length() < 20){
-        for(byte i = this->display_line_2.length(); i < 20; i++){
-          this->display_line_2 = this->display_line_2 + " ";
-        }
-      }
+    }
+    else if (line_nb == 2)
+    {
+      this->display_line_2[index] = one_char;
       lcd.setCursor(0, 1);
       lcd.print(this->display_line_2);
-    }else if(line_nb == -1){
+    }
+  }
+}
+
+/**
+ * Refresh the display
+ */
+inline void NervousSuperMother::refreshDisplay(bool force)
+{
+  if (force)
+  {
+    lcd.setCursor(0, 0);
+    lcd.print(this->display_line_1);
+    lcd.setCursor(0, 1);
+    lcd.print(this->display_line_2);
+  }
+  else
+  {
+    if (this->display_line_1 != this->previous_display_line_1)
+    {
       lcd.setCursor(0, 0);
       lcd.print(this->display_line_1);
+      this->previous_display_line_1 = this->display_line_1;
+    }
+    if (this->display_line_2 != this->previous_display_line_2)
+    {
       lcd.setCursor(0, 1);
       lcd.print(this->display_line_2);
+      this->previous_display_line_2 = this->display_line_2;
     }
   }
-
-  /**
-  * Update one char in line to display
-  */
-  inline void NervousSuperMother::updateOneChar(byte line_nb, char one_char, int index) {
-    if(index < 20 && index >= 0){
-      if(line_nb == 1){
-        this->display_line_1[index] = one_char;
-        lcd.setCursor(0, 0);
-        lcd.print(this->display_line_1);
-      }else if(line_nb == 2){
-        this->display_line_2[index] = one_char;
-        lcd.setCursor(0, 1);
-        lcd.print(this->display_line_2);
-      }
-    }
+  if (this->customDisplayRefresh != nullptr)
+  {
+    this->customDisplayRefresh();
   }
+}
 
-  /**
-  * Refresh the display
-  */
-  inline void NervousSuperMother::refreshDisplay(bool force) {
-    if(force){
-      lcd.setCursor(0, 0);
-      lcd.print(this->display_line_1);
-      lcd.setCursor(0, 1);
-      lcd.print(this->display_line_2);
-    }
-    else {
-      if(this->display_line_1 != this->previous_display_line_1){
-        lcd.setCursor(0, 0);
-        lcd.print(this->display_line_1);
-        this->previous_display_line_1 = this->display_line_1;
-      }
-      if(this->display_line_2 != this->previous_display_line_2){
-        lcd.setCursor(0, 1);
-        lcd.print(this->display_line_2);
-        this->previous_display_line_2 = this->display_line_2;
-      }
-    }
-    if(this->customDisplayRefresh != nullptr){
-      this->customDisplayRefresh();
-    }
-  }
-
-  #endif
+#endif

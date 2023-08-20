@@ -35,7 +35,7 @@ public:
     AudioRecordClip() : AudioStream(1, inputQueueArray)
     {
         // allocate space in external RAM (EXTMEM)
-        clip = (audio_block_data_t*) extmem_malloc(AUDIO_RECORD_CLIP_MAX_LENGTH * sizeof(audio_block_data_t));
+        clip = (audio_block_data_t *)extmem_malloc(AUDIO_RECORD_CLIP_MAX_LENGTH * sizeof(audio_block_data_t));
         if (clip == NULL)
         {
             Serial.println("ERROR: AudioRecordClip::AudioRecordClip(), could not allocate memory for clip");

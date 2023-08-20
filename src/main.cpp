@@ -265,10 +265,13 @@ void setup() {
   MIDI.setHandleNoteOn(OnNoteOn);
 
   // Starting animation
-  String starting_message = "! NervouSuperSynth !";
-  draw_starting_animation(starting_message, 25);
-  delay(1000);
-
+  lcd.setCursor(0, 0);
+  lcd.print("! NervouSuperSynth !");
+  for (int i = 0; i < 100; i++)
+  {
+    draw_progressbar(i);
+    delay(2);
+  }
 }
 
 void loop() {

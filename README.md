@@ -1,6 +1,6 @@
-# NervousSuperMother
+# NervousSuperMother - SamplePlayer
 
-Current version : 0.2.0
+Current version : 0.4.0 beta
 
 This work is inspired (a lot) by https://github.com/ghostintranslation work on his motherboards.
 
@@ -10,7 +10,7 @@ Platform built around Teensy 3.5/3.6 and adapted for 4.1 with DaddyBoard addon P
 
 It is mainly a development platform using almost all ports of Teensy.
 
-# ModularGrid : https://www.modulargrid.net/e/other-unknown-nervoussupersynth
+## ModularGrid : https://www.modulargrid.net/e/other-unknown-nervoussupersynth
 
 ![Image of NervousSuperSynth bare pcb](https://github.com/nervousapps/NervousSuperSynth/raw/proto_1/images/bare_pcb.png)
 
@@ -22,7 +22,7 @@ It is mainly a development platform using almost all ports of Teensy.
 
 ![Image of NervousSuperSynth monster vs proto_1 4](https://github.com/nervousapps/NervousSuperSynth/blob/proto_1/images/monstervsproto1_4.png)
 
-# I/O
+## I/O
 - 2 trigger/gate input
 - 4 CV input
 - MIDI IN
@@ -31,59 +31,63 @@ It is mainly a development platform using almost all ports of Teensy.
 - PT8211 DAC stereo output
 - LED screen 20x2 with contrast control
 
-# Analog controls
+## Controls
+### Analog controls
 - 10 sliders
 - 5 potentiometers
 - 3 switches
 
-# Digital controls
+### Digital controls
 - 2 encoders with pushbutton
 
-# Hardware controls
+### Hardware controls
 - RESET
 - PROGRAM
 
-# Driver
+## Software
+### Driver
 https://github.com/nervousapps/NervousSuperMother/tree/withdaddy
 
-# Firmware
+### Firmware
 There are several firmwares for this motherboard:
+- NervousSuperTester (this, intended for test and demo)
 - NervousSuperSynth (https://github.com/nervousapps/NervousSuperSynth/tree/common_base)
-- MicroDexed (https://codeberg.org/nervousapps/MicroDexed/src/branch/nervoussupermother)
+- MicroDexed (https://codeberg.org/nervousapps/MicroDexed/src/branch/nervoussupermother, UNDER DEV WITH DADDY)
+- SamplePlayer (https://github.com/nervousapps/NervousSuperMother/blob/NervousSuperSampler)
 
-# Compilation
+### Compilation
 PlatformIO or Teensyduino
 
-# SCHEMATICS & PCB
+## Hardware
+### SCHEMATICS & PCB
 NervousSuperMother : https://oshwlab.com/xtreemechille/supersynth-copy
-![Image of NervousSuperSynth monster vs proto_1 3](https://image.easyeda.com/histories/3226f8f64cd142eb9272e89193aaf473.png)
+![Image of NervousSuperSynth pcb](https://image.easyeda.com/histories/3226f8f64cd142eb9272e89193aaf473.png)
 
 SuperDaddyBoard : https://oshwlab.com/xtreemechille/supersynth-copy_copy
-![Image of NervousSuperSynth monster vs proto_1 3](https://image.easyeda.com/histories/089716ea3f2345f78fa68dfbae1b574d.png)
+![Image of SuperDaddyBoard pcb](https://image.easyeda.com/histories/089716ea3f2345f78fa68dfbae1b574d.png)
 
-SMD and TH parts, one PCB.
+SMD and TH parts, two PCB.
 
 I have some PCBs in stock, assembled, kit or bare, contact me at nervousrvoltage@icloud.com if you are interested.
 
-# HARDWARE FIX
+### PSRAM
+
+The two PSRAM slots must be filled with a psram chip and the test here https://github.com/PaulStoffregen/teensy41_psram_memtest/blob/master/teensy41_psram_memtest.ino must succeed.
+
+### FIX WITH DADDY
 - One slider is not connected
 - Forgot resistors connected to -5V for CVs, workaround with TL431
 - R/W display pin must be connected to ground
 - Encoder on teensy pin D1/X1 MUST be connected to pin D32 (serial port conflict)
 
-# BOM
+### BOM
 https://docs.google.com/spreadsheets/d/1-4hl6AcAoJYJrRvISyrwIaEGTYHwAB_IcKs__rtEGYY/edit?usp=sharing
 
-# PANEL
+### PANEL
 https://cad.onshape.com/documents/76309e780cb99c0f2066b519/w/a28c1d39745cdb4e42b1148c/e/933dfecdfdc7ae9463372842
 
 I made the panel here : https://www.john-steel.com/
 
-# TODO
+## TODO
 - clean code
 - separate switch and potentiometers from sliders
-
-# Hardware fix
-- slider Teensy 3.6
-- slider not connected (wire)
-- Teensy 4.1 adaptor board
